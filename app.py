@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime
 
 # -----------------------------------------------------------------------------
-# PAGE CONFIGURATION & ENTERPRISE UI STYLING
+# PAGE CONFIGURATION & NATIVE APP STYLING (OVERRIDING DEFAULT STREAMLIT)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="E&E Opti Lab Executive Console",
@@ -13,46 +13,99 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom High-End Web App CSS
 st.markdown("""
 <style>
-    .stApp { background-color: #f8fafc; color: #0f172a; }
+    /* Dark Web App Base Theme */
+    .stApp {
+        background: #0f172a;
+        color: #f8fafc;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    /* Top Header Bar */
+    .app-header {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 16px 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
     
     /* Executive Metric Cards */
-    .metric-card {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+    .kpi-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease;
+    }
+    .kpi-title {
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .kpi-value {
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 900;
+        margin-top: 6px;
+    }
+
+    /* Premium Kanban Cards */
+    .app-kanban-card {
+        background: #1e293b;
+        border-left: 4px solid #3b82f6;
+        border-top: 1px solid #334155;
+        border-right: 1px solid #334155;
+        border-bottom: 1px solid #334155;
         padding: 16px;
         border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        margin-bottom: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
     }
-    .metric-title { color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-    .metric-value { color: #0f172a; font-size: 26px; font-weight: 900; margin-top: 4px; }
+    .card-id { font-family: monospace; font-size: 11px; font-weight: 800; color: #38bdf8; }
+    .card-title { font-size: 14px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .card-meta { font-size: 11px; color: #94a3b8; margin-top: 6px; }
 
-    /* Kanban Card Container */
-    .kanban-card {
-        background-color: #ffffff;
-        border-left: 4px solid #2563eb;
-        border-top: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 14px;
-        border-radius: 10px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        margin-bottom: 12px;
+    /* Department Gateway Card Buttons */
+    .lab-gate-card {
+        background: #1e293b;
+        border: 2px solid #334155;
+        padding: 16px;
+        border-radius: 14px;
+        text-align: center;
+        color: #f8fafc;
+        font-weight: 800;
+        cursor: pointer;
     }
     
+    /* Override Streamlit UI Inputs */
+    .stSelectbox>div>div { background-color: #1e293b !important; color: white !important; border-radius: 10px !important; }
+    .stTextInput>div>div>input { background-color: #1e293b !important; color: white !important; border-radius: 10px !important; }
+    .stTextArea>div>div>textarea { background-color: #1e293b !important; color: white !important; border-radius: 10px !important; }
+    
+    /* Action Buttons */
     .stButton>button {
-        background-color: #2563eb !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
         color: #ffffff !important;
         font-weight: 800 !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         border: none !important;
+        padding: 10px 20px !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# DATABASE INITIALIZATION ENGINE (PURE SQL BACKEND)
+# DATABASE ENGINE (PURE SQL)
 # -----------------------------------------------------------------------------
 def get_connection():
     return sqlite3.connect('opti_lab_master.db')
@@ -61,7 +114,6 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
     
-    # Master Tasks Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS master_tasks (
             task_id TEXT PRIMARY KEY,
@@ -88,7 +140,6 @@ def init_db():
         )
     ''')
     
-    # Attendance Ledger
     c.execute('''
         CREATE TABLE IF NOT EXISTS attendance_ledger (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,26 +151,12 @@ def init_db():
         )
     ''')
 
-    # Audit History Feed
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS audit_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            lab TEXT,
-            shift TEXT,
-            task_id TEXT,
-            operator TEXT,
-            action TEXT,
-            notes TEXT
-        )
-    ''')
-
-    # Seed Initial Data if Empty
+    # Seed Sample Tasks
     c.execute("SELECT COUNT(*) FROM master_tasks")
     if c.fetchone()[0] == 0:
         c.execute("""
             INSERT INTO master_tasks VALUES 
-            ('TSK-599727', '', 'BatteryLab_Tasks', '450-9702', 'TL-9 Profile', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Unassigned', 'Shift A', 1000, 314, '31%', 'Running', '2026-09-01', '2026-09-10', '', '[Objective]: Evaluate battery pack performance under high temperature cycling'),
+            ('TSK-599727', '', 'BatteryLab_Tasks', '450-9702', 'TL-9 Life Cycle', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Unassigned', 'Shift A', 1000, 314, '31%', 'Running', '2026-09-01', '2026-09-10', '', '[Objective]: Evaluate pack performance under thermal stress'),
             ('SUB-839376', 'TSK-599727', 'BatteryLab_Tasks', '450-9702', '3. Life Cycle', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Sathya', 'Shift A', 1000, 398, '40%', 'Running', '2026-09-01', '2026-09-10', '', 'Chamber operating at 45C'),
             ('SUB-766448', 'TSK-599727', 'BatteryLab_Tasks', '450-9702', '4. Post Capacity', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Sanjay', 'Shift A', 1, 0, '0%', 'To Do', '2026-09-01', '2026-09-10', '', ''),
             ('TSK-918058', '', 'BatteryLab_Tasks', 'BFGMBC14000136', 'TL-2 Thermal', '450', 'EL-88391', 'P2', '27.2.1', 'Yeshwanth', 'Raja', 'Unassigned', 'Shift B', 1553, 1510, '97%', 'Running', '2026-09-02', '2026-09-12', '', '[Objective]: Thermal stress validation run'),
@@ -134,7 +171,7 @@ def init_db():
 init_db()
 
 # -----------------------------------------------------------------------------
-# LAB DEPARTMENT CONFIGURATIONS
+# DEPARTMENT LAB REGISTRY
 # -----------------------------------------------------------------------------
 LAB_CONFIG = {
     "🔋 Battery Lab": {
@@ -178,86 +215,101 @@ LAB_CONFIG = {
 }
 
 # -----------------------------------------------------------------------------
-# SIDEBAR NAVIGATION & LAB SELECTOR
+# APP HEADER BAR & LAB GATEWAY
 # -----------------------------------------------------------------------------
-st.sidebar.markdown("<h2 style='color:#2563eb; margin-bottom:0;'>⚡ E&E OPTI LAB</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase;'>EXECUTIVE CONSOLE</p>", unsafe_allow_html=True)
+st.markdown("""
+<div class="app-header">
+    <div>
+        <h2 style="margin:0; color:#ffffff; font-weight:900;">⚡ E&E OPTI LAB CONSOLE</h2>
+        <p style="margin:0; color:#94a3b8; font-size:12px; font-weight:700;">UNIVERSAL REAL-TIME EXECUTION ENGINE</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# 1. LAB SELECTION DROPDOWN (ALL 4 LABS AVAILABLE)
-selected_lab_label = st.sidebar.selectbox(
-    "🏢 SELECT DEPARTMENT LAB", 
-    list(LAB_CONFIG.keys())
-)
+# 1. VISUAL LAB GATEWAY SELECTOR
+st.markdown("##### 🏢 SELECT LAB DEPARTMENT CONSOLE ENVIRONMENT")
+gate_cols = st.columns(4)
+lab_labels = list(LAB_CONFIG.keys())
 
+if 'selected_lab' not in st.session_state:
+    st.session_state.selected_lab = lab_labels[0]
+
+for idx, label in enumerate(lab_labels):
+    with gate_cols[idx]:
+        if st.button(label, key=f"gate_btn_{idx}", use_container_width=True):
+            st.session_state.selected_lab = label
+            st.rerun()
+
+selected_lab_label = st.session_state.selected_lab
 lab_info = LAB_CONFIG[selected_lab_label]
 active_lab_key = lab_info["key"]
 
-st.sidebar.divider()
+st.markdown(f"<p style='color:#38bdf8; font-size:12px; font-weight:800; margin-top:8px;'>ACTIVE SCOPE: {selected_lab_label.upper()}</p>", unsafe_allow_html=True)
+st.markdown("---")
 
-# 2. MODULE CONSOLE SELECTION
-active_module = st.sidebar.radio("Navigation Console", [
+# 2. SIDEBAR NAVIGATION
+active_module = st.sidebar.radio("Console Navigation", [
     "📊 Dashboard 1 (Engineering)", 
     "📋 Task Planner", 
-    "☀️ Shift Workbench", 
+    "☀️ Shift Execution Workbench", 
     "📈 Dashboard 2 (Analytics)", 
     "📑 TRF Gateway"
 ])
 
-# Helper Function to Fetch Data for Active Lab
-def load_active_lab_data():
+def load_lab_data():
     conn = get_connection()
     df = pd.read_sql_query("SELECT * FROM master_tasks WHERE lab_name = ?", conn, params=(active_lab_key,))
     conn.close()
     return df
 
-df_all = load_active_lab_data()
+df_all = load_lab_data()
 
 # -----------------------------------------------------------------------------
 # MODULE 1: DASHBOARD 1 (ENGINEERING COMMAND CENTER)
 # -----------------------------------------------------------------------------
 if active_module == "📊 Dashboard 1 (Engineering)":
-    st.title(f"📊 Dashboard 1 — {selected_lab_label.upper()}")
+    st.markdown(f"### 📊 Dashboard 1 — {selected_lab_label}")
     
     master_tasks = df_all[(df_all['parent_id'] == '') | (df_all['parent_id'].isna())]
     
-    # Key Metric Cards Deck
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
+    # KPI Metric Cards Deck
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
         st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-title">Master DVP Tasks</div>
-            <div class="metric-value">{len(master_tasks)}</div>
+        <div class="kpi-card">
+            <div class="kpi-title">Master DVP Tasks</div>
+            <div class="kpi-value">{len(master_tasks)}</div>
         </div>
         """, unsafe_allow_html=True)
-    with col2:
+    with c2:
         running_cnt = len(master_tasks[master_tasks['status'] == 'Running'])
         st.markdown(f"""
-        <div class="metric-card" style="border-left: 4px solid #16a34a;">
-            <div class="metric-title">Running Runs 🟢</div>
-            <div class="metric-value">{running_cnt}</div>
+        <div class="kpi-card" style="border-left: 4px solid #16a34a;">
+            <div class="kpi-title">Running Runs 🟢</div>
+            <div class="kpi-value">{running_cnt}</div>
         </div>
         """, unsafe_allow_html=True)
-    with col3:
+    with c3:
         complete_cnt = len(master_tasks[master_tasks['status'].isin(['Complete', 'Closed & Certified'])])
         st.markdown(f"""
-        <div class="metric-card" style="border-left: 4px solid #2563eb;">
-            <div class="metric-title">Completed ✅</div>
-            <div class="metric-value">{complete_cnt}</div>
+        <div class="kpi-card" style="border-left: 4px solid #2563eb;">
+            <div class="kpi-title">Completed ✅</div>
+            <div class="kpi-value">{complete_cnt}</div>
         </div>
         """, unsafe_allow_html=True)
-    with col4:
+    with c4:
         blocked_cnt = len(master_tasks[master_tasks['status'] == 'Awaiting Resource'])
         st.markdown(f"""
-        <div class="metric-card" style="border-left: 4px solid #dc2626;">
-            <div class="metric-title">Awaiting Resource 🛑</div>
-            <div class="metric-value">{blocked_cnt}</div>
+        <div class="kpi-card" style="border-left: 4px solid #dc2626;">
+            <div class="kpi-title">Blocked / Stoppages 🛑</div>
+            <div class="kpi-value">{blocked_cnt}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    # Search & Filter Engine
-    st.subheader("🔍 Search & Filter Matrix")
+    # Filter Matrix
+    st.markdown("##### 🔍 Search & Filter Matrix")
     f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
     search_q = f_col1.text_input("Fuzzy Search TRF ID, BIN Number, or DVP Name")
     sprint_f = f_col2.selectbox("Sprint Allocation", ["ALL", "27.2.1", "27.1.2"])
@@ -285,9 +337,9 @@ if active_module == "📊 Dashboard 1 (Engineering)":
 # MODULE 2: TASK PLANNER (BLUEPRINT GENERATOR)
 # -----------------------------------------------------------------------------
 elif active_module == "📋 Task Planner":
-    st.title(f"📋 Task Planner & Blueprint Generator — {selected_lab_label}")
+    st.markdown(f"### 📋 Task Planner & Blueprint Generator — {selected_lab_label}")
     
-    st.subheader("Active Pending Shift Workload Matrix")
+    # Workload Queue Cards
     p_col1, p_col2, p_col3 = st.columns(3)
     subs_all = df_all[df_all['parent_id'] != '']
     
@@ -295,13 +347,30 @@ elif active_module == "📋 Task Planner":
     load_b = len(subs_all[(subs_all['target_shift'] == 'Shift B') & (~subs_all['status'].isin(['Complete', 'Closed & Certified']))])
     load_c = len(subs_all[(subs_all['target_shift'] == 'Shift C') & (~subs_all['status'].isin(['Complete', 'Closed & Certified']))])
 
-    p_col1.info(f"**Shift A Queue:** {load_a} Tasks")
-    p_col2.info(f"**Shift B Queue:** {load_b} Tasks")
-    p_col3.info(f"**Shift C Queue:** {load_c} Tasks")
+    p_col1.markdown(f"""
+    <div class="kpi-card" style="border-left: 4px solid #38bdf8;">
+        <div class="kpi-title">Shift A Queue</div>
+        <div class="kpi-value">{load_a} Tasks</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("---")
+    p_col2.markdown(f"""
+    <div class="kpi-card" style="border-left: 4px solid #38bdf8;">
+        <div class="kpi-title">Shift B Queue</div>
+        <div class="kpi-value">{load_b} Tasks</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.subheader("➕ Create New Master DVP Task & Subtask Sequence")
+    p_col3.markdown(f"""
+    <div class="kpi-card" style="border-left: 4px solid #38bdf8;">
+        <div class="kpi-title">Shift C Queue</div>
+        <div class="kpi-value">{load_c} Tasks</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    st.markdown("##### ➕ Create New Master DVP Task & Subtask Sequence")
     with st.form("task_creation_form"):
         c1, c2, c3 = st.columns(3)
         bin_no = c1.text_input("BIN / Pack Barcode *", placeholder="e.g. BGFT5B17000619")
@@ -344,7 +413,6 @@ elif active_module == "📋 Task Planner":
                     "Running", today_str, today_str, "", f"[Objective]: {obj_text}"
                 ))
 
-                # Append Blueprint Steps if selected
                 if blueprint_code in lab_info["blueprints"]:
                     steps = lab_info["blueprints"][blueprint_code]
                     for idx, step_name in enumerate(steps):
@@ -359,16 +427,16 @@ elif active_module == "📋 Task Planner":
 
                 conn.commit()
                 conn.close()
-                st.success(f"✅ Master Task [{master_id}] & Child Steps Created Successfully for {selected_lab_label}!")
+                st.success(f"✅ Master Task [{master_id}] Created Successfully for {selected_lab_label}!")
                 st.rerun()
 
 # -----------------------------------------------------------------------------
 # MODULE 3: SHIFT EXECUTION WORKBENCH (KANBAN)
 # -----------------------------------------------------------------------------
-elif active_module == "☀️ Shift Workbench":
-    st.title(f"☀️ Shift Execution Workbench — {selected_lab_label.upper()}")
+elif active_module == "☀️ Shift Execution Workbench":
+    st.markdown(f"### ☀️ Shift Execution Workbench — {selected_lab_label}")
 
-    # Floor Associate Check-In Desk
+    # Attendance Desk
     with st.expander("👤 Floor Associate Attendance Check-In Desk", expanded=True):
         ac1, ac2, ac3 = st.columns([2, 1, 1])
         operator_sel = ac1.selectbox("Select Associate / Technician", lab_info["shiftIncharges"] + lab_info["associates"])
@@ -391,23 +459,22 @@ elif active_module == "☀️ Shift Workbench":
             conn.close()
             st.warning(f"Check-Out Logged for {operator_sel}")
 
-    active_shift = st.radio("Select Active Floor Execution Shift", ["Shift A", "Shift B", "Shift C"], horizontal=True)
+    active_shift = st.radio("Select Active Execution Shift", ["Shift A", "Shift B", "Shift C"], horizontal=True)
 
-    # Filter Active Subtasks
     subtasks_shift = df_all[(df_all['parent_id'] != '') & (df_all['target_shift'] == active_shift) & (~df_all['status'].isin(['Complete', 'Closed & Certified']))]
 
     col_todo, col_run, col_block = st.columns(3)
 
     with col_todo:
-        st.subheader("📋 TO DO (ASSIGNED)")
+        st.markdown("##### 📋 TO DO (ASSIGNED)")
         todo_df = subtasks_shift[subtasks_shift['status'] == 'To Do']
         for _, row in todo_df.iterrows():
             with st.container():
                 st.markdown(f"""
-                <div class="kanban-card">
-                    <div style="font-size:10px; font-weight:800; color:#2563eb;">{row['task_id']}</div>
-                    <div style="font-size:13px; font-weight:700; color:#0f172a;">{row['dvp_name']}</div>
-                    <div style="font-size:11px; color:#64748b; margin-top:4px;">Pack Barcode: {row['bin_pack_number']}</div>
+                <div class="app-kanban-card">
+                    <div class="card-id">{row['task_id']}</div>
+                    <div class="card-title">{row['dvp_name']}</div>
+                    <div class="card-meta">Pack Barcode: {row['bin_pack_number']}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -418,20 +485,20 @@ elif active_module == "☀️ Shift Workbench":
                     c.execute("UPDATE master_tasks SET assigned_associate = ?, status = 'Running' WHERE task_id = ?", (new_assoc, row['task_id']))
                     conn.commit()
                     conn.close()
-                    st.success("Updated!")
+                    st.success("Assigned!")
                     st.rerun()
 
     with col_run:
-        st.subheader("🟢 IN PROGRESS / RUNNING")
+        st.markdown("##### 🟢 IN PROGRESS / RUNNING")
         run_df = subtasks_shift[subtasks_shift['status'] == 'Running']
         for _, row in run_df.iterrows():
             with st.container():
                 st.markdown(f"""
-                <div class="kanban-card" style="border-left: 4px solid #16a34a;">
-                    <div style="font-size:10px; font-weight:800; color:#16a34a;">{row['task_id']}</div>
-                    <div style="font-size:13px; font-weight:700; color:#0f172a;">{row['dvp_name']}</div>
-                    <div style="font-size:11px; color:#64748b;">Assigned: <b>{row['assigned_associate']}</b></div>
-                    <div style="font-size:11px; color:#64748b;">Completed: {row['completed_units']} / {row['target_units']} Units</div>
+                <div class="app-kanban-card" style="border-left: 4px solid #16a34a;">
+                    <div class="card-id" style="color:#34d399;">{row['task_id']}</div>
+                    <div class="card-title">{row['dvp_name']}</div>
+                    <div class="card-meta">Assigned: <b>{row['assigned_associate']}</b></div>
+                    <div class="card-meta">Progress: {row['completed_units']} / {row['target_units']} Units</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -451,18 +518,18 @@ elif active_module == "☀️ Shift Workbench":
                         st.rerun()
 
     with col_block:
-        st.subheader("🛑 BLOCKED / 3M ISSUES")
+        st.markdown("##### 🛑 BLOCKED / 3M ISSUES")
         block_df = subtasks_shift[subtasks_shift['status'] == 'Awaiting Resource']
         for _, row in block_df.iterrows():
             st.error(f"**{row['task_id']} — {row['dvp_name']}**\n\nNotes: {row['observations']}")
 
 # -----------------------------------------------------------------------------
-# MODULE 4: DASHBOARD 2 (ANALYTICS & AUDIT STREAM)
+# MODULE 4: DASHBOARD 2 (ANALYTICS)
 # -----------------------------------------------------------------------------
 elif active_module == "📈 Dashboard 2 (Analytics)":
-    st.title(f"📈 Dashboard 2 — {selected_lab_label} Analytics")
+    st.markdown(f"### 📈 Dashboard 2 — {selected_lab_label} Analytics")
     
-    st.subheader("📅 Associate Monthly Attendance Summary")
+    st.markdown("##### 📅 Associate Attendance Punch Ledger")
     conn = get_connection()
     df_att = pd.read_sql_query("SELECT * FROM attendance_ledger WHERE lab = ?", conn, params=(active_lab_key,))
     conn.close()
@@ -470,11 +537,11 @@ elif active_module == "📈 Dashboard 2 (Analytics)":
     if not df_att.empty:
         st.dataframe(df_att, use_container_width=True)
     else:
-        st.info(f"No punch records logged for {selected_lab_label} yet.")
+        st.info("No attendance punch logs recorded yet.")
 
     st.markdown("---")
     
-    st.subheader("🏆 Associate Task Output Scorecard")
+    st.markdown("##### 🏆 Associate Task Output Throughput Scorecard")
     done_subs = df_all[(df_all['parent_id'] != '') & (df_all['status'].isin(['Complete', 'Closed & Certified']))]
     if not done_subs.empty:
         scorecard = done_subs['assigned_associate'].value_counts().reset_index()
@@ -484,10 +551,10 @@ elif active_module == "📈 Dashboard 2 (Analytics)":
         st.caption("No completed subtask steps logged yet.")
 
 # -----------------------------------------------------------------------------
-# MODULE 5: STANDALONE TRF GATEWAY
+# MODULE 5: TRF GATEWAY
 # -----------------------------------------------------------------------------
 elif active_module == "📑 TRF Gateway":
-    st.title(f"📑 Standalone TRF Certification & Report Desk — {selected_lab_label}")
+    st.markdown(f"### 📑 TRF Certification & Report Desk — {selected_lab_label}")
     
     master_tasks = df_all[(df_all['parent_id'] == '') | (df_all['parent_id'].isna())]
     
