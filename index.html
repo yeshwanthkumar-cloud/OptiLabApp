@@ -3,30 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Opti Lab Console</title>
+  <title>Opti Lab Platform - Digital Twin</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
-    .db-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02); }
-    .db-card-hover:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04); }
+    .db-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02); }
     .nav-tab.active { color: #2563eb; border-bottom: 2.5px solid #2563eb; font-weight: 700; }
     .lab-btn.active { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; font-weight: 700; }
+    .eq-box { transition: all 0.2s ease; cursor: pointer; }
+    .eq-box:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .status-running { background-color: #dcfce7; border-color: #22c55e; color: #15803d; }
+    .status-paused { background-color: #fef9c3; border-color: #eab308; color: #854d0e; }
+    .status-blocked { background-color: #ffe4e6; border-color: #f43f5e; color: #9f1239; }
+    .status-idle { background-color: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
   </style>
 </head>
 <body class="h-full flex flex-col bg-slate-50/80 text-slate-800">
 
-  <!-- TOP APP HEADER -->
+  <!-- TOP HEADER -->
   <header class="w-full bg-white border-b border-slate-200/80 px-8 py-3.5 flex items-center justify-between shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm">⚡</div>
       <div>
-        <h1 class="text-sm font-extrabold text-slate-900 tracking-tight leading-none">E&E OPTI LAB</h1>
-        <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Floor Execution Platform</p>
+        <h1 class="text-sm font-extrabold text-slate-900 tracking-tight leading-none">E&E OPTI LAB PLATFORM</h1>
+        <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Floor Execution & Digital Twin Governance</p>
       </div>
     </div>
 
-    <!-- CLEAN 4-LAB ENVIRONMENT SWITCHER -->
+    <!-- 4-LAB ENVIRONMENT SWITCHER -->
     <div class="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
       <button onclick="switchLab('BatteryLab_Tasks')" id="btn-lab-battery" class="lab-btn active px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent transition text-slate-600 hover:text-slate-900">🔋 Battery Lab</button>
       <button onclick="switchLab('CellLab_Tasks')" id="btn-lab-cell" class="lab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent transition text-slate-600 hover:text-slate-900">🧪 Cell Lab</button>
@@ -35,29 +41,169 @@
     </div>
   </header>
 
-  <!-- SECONDARY MAIN NAVIGATION -->
+  <!-- SECONDARY NAVIGATION -->
   <nav class="bg-white border-b border-slate-200/80 px-8 flex gap-8 shrink-0">
-    <button onclick="switchModule('mod-workbench')" id="nav-workbench" class="nav-tab active py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">☀️ Shift Workbench</button>
-    <button onclick="switchModule('mod-planner')" id="nav-planner" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📋 Task Planner</button>
-    <button onclick="switchModule('mod-dashboard1')" id="nav-dashboard1" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📊 Master Matrix</button>
-    <button onclick="switchModule('mod-analytics')" id="nav-analytics" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📈 Attendance & Roster</button>
+    <button onclick="switchModule('mod-observation')" id="nav-observation" class="nav-tab active py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">🗺️ Lab Observation Floor Map</button>
+    <button onclick="switchModule('mod-workbench')" id="nav-workbench" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">☀️ Shift Workbench</button>
+    <button onclick="switchModule('mod-planner')" id="nav-planner" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📋 Task Planner & Flow Builder</button>
+    <button onclick="switchModule('mod-dashboard1')" id="nav-dashboard1" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📊 Component Analytics</button>
+    <button onclick="switchModule('mod-analytics')" id="nav-analytics" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📈 Attendance & 5S Trace</button>
   </nav>
 
   <!-- MAIN CONTAINER -->
   <div class="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto space-y-6">
 
     <!-- ========================================================================= -->
-    <!-- VIEW 1: SHIFT WORKBENCH (DARWINBOX ATTENDANCE & KANBAN) -->
+    <!-- VIEW 0: DIGITAL TWIN OBSERVATION WINDOW (FLOOR LAYOUT MAP) -->
     <!-- ========================================================================= -->
-    <section id="mod-workbench" class="space-y-6">
+    <section id="mod-observation" class="space-y-6">
       
-      <!-- DARWINBOX-STYLE ATTENDANCE CARD -->
+      <!-- STATUS LEGEND DECK -->
+      <div class="db-card p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-800">Observation Window Scope:</span>
+          <span id="lbl-obs-scope" class="text-xs font-black text-blue-600 uppercase">BATTERY LAB</span>
+        </div>
+
+        <div class="flex items-center gap-4 text-xs font-semibold">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-600"></span> Running 🟢</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 border border-amber-500"></span> Paused / Handover 🟡</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 border border-rose-600"></span> Blocked 🛑</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-300 border border-slate-400"></span> Idle / Available ⚪</span>
+        </div>
+      </div>
+
+      <!-- ROOM-1 BATTERY LAB DIGITAL TWIN MAP -->
+      <div class="db-card p-6 space-y-6 overflow-x-auto">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Room-1 Battery Lab Visual Floor Layout</h3>
+          <span class="text-[11px] font-medium text-slate-500">Live Equipment Telemetry Grid</span>
+        </div>
+
+        <!-- TOP EQUIPMENT ROW -->
+        <div class="flex items-center justify-between gap-3 min-w-[900px]">
+          <div id="eq-Chamber-3" onclick="clickEquipment('Chamber-3')" class="eq-box status-idle p-3 rounded-xl border w-32 text-center">
+            <span class="text-[10px] font-bold block">Chamber-3</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-ITECH-Cycler" onclick="clickEquipment('ITECH-Cycler')" class="eq-box status-idle p-3 rounded-xl border w-28 text-center">
+            <span class="text-[10px] font-bold block">ITECH Cycler (2Nos)</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-Hiacc" onclick="clickEquipment('Hiacc')" class="eq-box status-idle p-3 rounded-xl border w-32 text-center">
+            <span class="text-[10px] font-bold block">Hiacc Chamber</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-EA-Cycler-Top" onclick="clickEquipment('EA-Cycler-Top')" class="eq-box status-idle p-3 rounded-xl border w-24 text-center">
+            <span class="text-[10px] font-bold block">EA Cycler</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-Chamber-1" onclick="clickEquipment('Chamber-1')" class="eq-box status-idle p-3 rounded-xl border w-32 text-center">
+            <span class="text-[10px] font-bold block">Chamber-1</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-Neware-4Ch" onclick="clickEquipment('Neware-4Ch')" class="eq-box status-idle p-3 rounded-xl border w-32 text-center">
+            <span class="text-[10px] font-bold block">Neware Cycler (4Ch)</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-Chamber-8" onclick="clickEquipment('Chamber-8')" class="eq-box status-idle p-3 rounded-xl border w-32 text-center">
+            <span class="text-[10px] font-bold block">Chamber-8</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+        </div>
+
+        <!-- MAIN GANGWAY / WALKWAY -->
+        <div class="w-full bg-emerald-500 h-10 rounded-xl border-y-4 border-amber-400 flex items-center justify-center font-black text-white text-xs tracking-widest uppercase shadow-inner min-w-[900px]">
+          MAIN LAB WALKWAY & GANGWAY
+        </div>
+
+        <!-- BOTTOM EQUIPMENT ROW -->
+        <div class="flex items-start justify-between gap-3 min-w-[900px]">
+          <div class="flex gap-2">
+            <div id="eq-EA-1" onclick="clickEquipment('EA-1')" class="eq-box status-idle p-3 rounded-xl border w-24 text-center">
+              <span class="text-[10px] font-bold block">EA Cycler #1</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+            <div id="eq-EA-2" onclick="clickEquipment('EA-2')" class="eq-box status-idle p-3 rounded-xl border w-24 text-center">
+              <span class="text-[10px] font-bold block">EA Cycler #2</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+            <div id="eq-EA-3" onclick="clickEquipment('EA-3')" class="eq-box status-idle p-3 rounded-xl border w-24 text-center">
+              <span class="text-[10px] font-bold block">EA Cycler #3</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div id="eq-Chamber-7" onclick="clickEquipment('Chamber-7')" class="eq-box status-idle p-3 rounded-xl border w-36 text-center">
+              <span class="text-[10px] font-bold block">Chamber-7</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+            <div id="eq-EA-Cycler-2Nos" onclick="clickEquipment('EA-Cycler-2Nos')" class="eq-box status-idle p-3 rounded-xl border w-36 text-center">
+              <span class="text-[10px] font-bold block">EA Cycler (2 Nos)</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div id="eq-Chamber-4" onclick="clickEquipment('Chamber-4')" class="eq-box status-idle p-3 rounded-xl border w-36 text-center">
+              <span class="text-[10px] font-bold block">Chamber-4</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+            <div id="eq-EA-Cycler-Bottom" onclick="clickEquipment('EA-Cycler-Bottom')" class="eq-box status-idle p-3 rounded-xl border w-36 text-center">
+              <span class="text-[10px] font-bold block">EA Cycler</span>
+              <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROOM-2 BATTERY LAB DIGITAL TWIN MAP -->
+      <div class="db-card p-6 space-y-6 overflow-x-auto">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Room-2 Battery Lab Visual Floor Layout</h3>
+        </div>
+
+        <div class="flex items-center gap-6 min-w-[900px]">
+          <div id="eq-Air-Leak" onclick="clickEquipment('Air-Leak')" class="eq-box status-idle p-4 rounded-xl border w-36 text-center">
+            <span class="text-[10px] font-bold block">Air Leak Tester</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-4-Channel" onclick="clickEquipment('4-Channel')" class="eq-box status-idle p-4 rounded-xl border w-48 text-center">
+            <span class="text-[10px] font-bold block">4 Channel Bench (1,2,3,4)</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+
+          <div id="eq-Neware-Room2" onclick="clickEquipment('Neware-Room2')" class="eq-box status-idle p-4 rounded-xl border w-40 text-center">
+            <span class="text-[10px] font-bold block">Neware Cycler</span>
+            <span class="eq-task font-mono text-[11px] font-black block mt-1">IDLE</span>
+          </div>
+        </div>
+
+        <div class="w-full bg-emerald-500 h-8 rounded-xl border-y-4 border-amber-400 flex items-center justify-center font-black text-white text-[10px] tracking-widest uppercase shadow-inner min-w-[900px]">
+          ROOM-2 SECONDARY WALKWAY
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: SHIFT WORKBENCH -->
+    <!-- ========================================================================= -->
+    <section id="mod-workbench" class="hidden space-y-6">
       <div class="db-card p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3.5">
           <div class="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">👤</div>
           <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift Attendance Desk</span>
-            <h3 class="text-sm font-bold text-slate-900 mt-0.5">Punch Shift Start & End</h3>
+            <h3 class="text-sm font-bold text-slate-900 mt-0.5">Punch Shift Start & Handover</h3>
           </div>
         </div>
 
@@ -77,14 +223,11 @@
           </select>
 
           <button onclick="logAttendance('CHECK_IN')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition shadow-sm">Clock In</button>
-          <button onclick="logAttendance('CHECK_OUT')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-xl transition">Clock Out</button>
+          <button onclick="open5SModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-xl transition">Clock Out (5S)</button>
         </div>
       </div>
 
-      <!-- KANBAN BOARD -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- TO DO -->
         <div class="space-y-3">
           <div class="flex justify-between items-center px-1">
             <span class="font-bold text-xs text-slate-600 uppercase tracking-wider">To Do</span>
@@ -93,7 +236,6 @@
           <div id="col-todo" class="space-y-3 min-h-[350px]"></div>
         </div>
 
-        <!-- RUNNING -->
         <div class="space-y-3">
           <div class="flex justify-between items-center px-1">
             <span class="font-bold text-xs text-emerald-600 uppercase tracking-wider">In Progress 🟢</span>
@@ -102,7 +244,6 @@
           <div id="col-running" class="space-y-3 min-h-[350px]"></div>
         </div>
 
-        <!-- BLOCKED -->
         <div class="space-y-3">
           <div class="flex justify-between items-center px-1">
             <span class="font-bold text-xs text-rose-600 uppercase tracking-wider">Blocked 🛑</span>
@@ -110,104 +251,117 @@
           </div>
           <div id="col-blocked" class="space-y-3 min-h-[350px]"></div>
         </div>
-
       </div>
     </section>
 
     <!-- ========================================================================= -->
     <!-- VIEW 2: TASK PLANNER -->
     <!-- ========================================================================= -->
-    <section id="mod-planner" class="hidden max-w-2xl mx-auto">
-      <div class="db-card p-8 space-y-6">
+    <section id="mod-planner" class="hidden space-y-6 max-w-3xl mx-auto">
+      <div class="db-card p-6 space-y-4 border-l-4 border-l-purple-600">
         <div>
-          <h2 class="text-base font-bold text-slate-900">Create DVP Blueprint Task</h2>
-          <p class="text-xs text-slate-500 mt-1">Generate master DVP profiles and automated subtasks for floor associates.</p>
+          <h2 class="text-sm font-bold text-slate-900">🛠️ Dynamic Test Flow Builder</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Define custom test step sequences once to populate task creation dropdowns.</p>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <input type="text" id="flow-name-inp" placeholder="e.g. BMS Thermal Stress Flow" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
+          <div id="flow-steps-container" class="space-y-2">
+            <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg" placeholder="Step 1 Name">
+          </div>
+          <div class="flex gap-2">
+            <button onclick="addFlowStepInput()" type="button" class="bg-slate-100 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs">+ Add Step</button>
+            <button onclick="saveCustomFlow()" type="button" class="bg-purple-600 text-white font-semibold px-4 py-1.5 rounded-lg text-xs">💾 Save Flow Template</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="db-card p-6 space-y-6">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Create Master DVP Task</h2>
         </div>
 
         <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-4 text-xs">
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-slate-500 font-medium mb-1">BIN / Pack Barcode *</label>
-              <input type="text" id="inp-bin" required placeholder="e.g. BGFT5B17000619" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+              <input type="text" id="inp-bin" required placeholder="e.g. BGFT5B17000619" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
             </div>
             <div>
               <label class="block text-slate-500 font-medium mb-1">DVP Profile Name *</label>
-              <input type="text" id="inp-dvp" required placeholder="e.g. STB Pack Life Cycle" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+              <input type="text" id="inp-dvp" required placeholder="e.g. STB Pack Life Cycle" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
             </div>
           </div>
 
           <div class="grid grid-cols-3 gap-4">
             <div>
-              <label class="block text-slate-500 font-medium mb-1">Priority *</label>
-              <select id="inp-priority" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
-                <option value="P1">P1 - Critical</option>
-                <option value="P2" selected>P2 - High</option>
-                <option value="P3">P3 - Medium</option>
+              <label class="block text-slate-500 font-medium mb-1">Component Category *</label>
+              <select id="inp-category" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
+                <option value="Battery Pack">Battery Pack</option>
+                <option value="Cell Module">Cell Module</option>
+                <option value="BMS Controller">BMS Controller</option>
               </select>
             </div>
             <div>
-              <label class="block text-slate-500 font-medium mb-1">TRF ID</label>
-              <input type="text" id="inp-trf" placeholder="e.g. EL-46497" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
+              <label class="block text-slate-500 font-medium mb-1">Assigned Equipment Station *</label>
+              <select id="inp-equipment" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
+                <option value="Chamber-3">Chamber-3</option>
+                <option value="ITECH-Cycler">ITECH Cycler</option>
+                <option value="Hiacc">Hiacc Chamber</option>
+                <option value="Chamber-1">Chamber-1</option>
+                <option value="Neware-4Ch">Neware Cycler 4Ch</option>
+                <option value="Chamber-8">Chamber-8</option>
+                <option value="Air-Leak">Air Leak Tester</option>
+              </select>
             </div>
             <div>
-              <label class="block text-slate-500 font-medium mb-1">Target Shift *</label>
-              <select id="inp-shift" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
-                <option value="Shift A">Shift A</option>
-                <option value="Shift B">Shift B</option>
-                <option value="Shift C">Shift C</option>
-              </select>
+              <label class="block text-slate-500 font-medium mb-1">Daily Target (Cycles/Hrs) *</label>
+              <input type="number" id="inp-target-units" required value="100" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold">
             </div>
           </div>
 
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Profile Blueprint Template</label>
-            <select id="inp-blueprint" class="w-full bg-slate-50 border border-slate-200 text-blue-600 font-semibold p-2.5 rounded-xl">
+            <label class="block text-slate-500 font-medium mb-1">Select Test Flow Blueprint *</label>
+            <select id="inp-blueprint" class="w-full bg-slate-50 border border-slate-200 text-blue-600 font-bold p-2.5 rounded-xl">
               <option value="CUSTOM">Custom Single Step</option>
-              <option value="TL-1 Profile">TL-1 Profile (5 Steps)</option>
-              <option value="TL-2 Thermal">TL-2 Thermal Cycling (4 Steps)</option>
-              <option value="TL-9 Life Cycle">TL-9 Life Cycle (4 Steps)</option>
-              <option value="Cell Formation">Cell Formation Protocol (3 Steps)</option>
-              <option value="Vibration Flow">Vibration Standard Flow (5 Steps)</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-slate-500 font-medium mb-1">Test Objective & Notes *</label>
-            <textarea id="inp-objective" required rows="2" placeholder="e.g. Evaluate battery pack performance under thermal stress" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea>
+            <label class="block text-slate-500 font-medium mb-1">Test Background & Objective *</label>
+            <textarea id="inp-background" required rows="2" placeholder="Describe test objective..." class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea>
           </div>
 
           <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl text-xs transition shadow-sm">
-            Generate Blueprint Task
+            Generate Task & Assign to Station
           </button>
         </form>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 3: MASTER MATRIX -->
+    <!-- VIEW 3: COMPONENT ANALYTICS -->
     <!-- ========================================================================= -->
-    <section id="mod-dashboard1" class="hidden">
-      <div class="db-card overflow-hidden">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase text-slate-400 font-bold">
-            <tr>
-              <th class="p-3">Task ID</th>
-              <th class="p-3">Priority</th>
-              <th class="p-3">Pack Barcode</th>
-              <th class="p-3">TRF ID</th>
-              <th class="p-3">DVP Profile</th>
-              <th class="p-3">Lead Eng</th>
-              <th class="p-3">Status</th>
-              <th class="p-3">Notes</th>
-            </tr>
-          </thead>
-          <tbody id="tbl-master-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
-        </table>
+    <section id="mod-dashboard1" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="db-card p-6 space-y-3">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Component-Wise Task Distribution</h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="chartCategory"></canvas>
+          </div>
+        </div>
+
+        <div class="db-card p-6 space-y-3">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Associate Daily Throughput</h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="chartAssociate"></canvas>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- VIEW 4: ATTENDANCE LEDGER -->
+    <!-- VIEW 4: ATTENDANCE & 5S LEDGER -->
     <!-- ========================================================================= -->
     <section id="mod-analytics" class="hidden">
       <div class="db-card overflow-hidden">
@@ -217,7 +371,8 @@
               <th class="p-3">Timestamp</th>
               <th class="p-3">Operator</th>
               <th class="p-3">Shift</th>
-              <th class="p-3">Punch Event</th>
+              <th class="p-3">Event</th>
+              <th class="p-3">5S Verified</th>
             </tr>
           </thead>
           <tbody id="tbl-attendance-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
@@ -227,7 +382,40 @@
 
   </div>
 
-  <!-- PROGRESS LOG MODAL -->
+  <!-- MODAL: MANDATORY 5S CHECKLIST FOR CLOCK OUT -->
+  <div id="modal-5s" class="hidden fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-xl">
+      <div class="border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-sm text-slate-900">Mandatory 5S Workstation Handover</h3>
+        <p class="text-[11px] text-slate-500 mt-0.5">Verify workstation compliance before clocking out.</p>
+      </div>
+
+      <div class="space-y-2.5 text-xs font-medium">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" class="chk-5s rounded text-blue-600"> <span>1. Workstation & floor cleaned of debris</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" class="chk-5s rounded text-blue-600"> <span>2. Tools & fixtures returned to shadow board</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" class="chk-5s rounded text-blue-600"> <span>3. Cables & harnesses safely routed</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" class="chk-5s rounded text-blue-600"> <span>4. Task progress & cycle counts updated</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" class="chk-5s rounded text-blue-600"> <span>5. Handover notes logged for incoming shift</span>
+        </label>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button onclick="close5SModal()" class="bg-slate-100 text-slate-600 font-semibold px-4 py-2 rounded-xl text-xs">Cancel</button>
+        <button onclick="submit5SClockOut()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-xs">Verify & Clock Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PROGRESS UPDATE -->
   <div id="modal-progress" class="hidden fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-xl">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -235,7 +423,7 @@
           <h3 class="font-bold text-sm text-slate-900">Log Task Progress</h3>
           <p id="lbl-modal-taskid" class="text-[11px] font-mono text-blue-600 font-semibold mt-0.5">SUB-839376</p>
         </div>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+        <button onclick="closeModal()" class="text-slate-400 font-bold text-lg">&times;</button>
       </div>
 
       <input type="hidden" id="pop-task-id">
@@ -245,25 +433,24 @@
         <div>
           <label class="block text-slate-500 font-medium mb-1">Status *</label>
           <select id="pop-status" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
-            <option value="Running">Running 🟢</option>
+            <option value="Running">Running 🟢 (Rolls Over to Next Shift)</option>
             <option value="Complete">Completed ✅</option>
             <option value="Awaiting Resource">Blocked / Stoppage 🛑</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-slate-500 font-medium mb-1">Completed Units / Cycles *</label>
+          <label class="block text-slate-500 font-medium mb-1">Completed Cycles / Hours *</label>
           <input type="number" id="pop-units" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold" min="0">
         </div>
 
         <div>
-          <label class="block text-amber-600 font-bold mb-1">⚠️ Delay / Stoppage Reason *</label>
+          <label class="block text-amber-600 font-bold mb-1">⚠️ Delay / Stoppage Justification *</label>
           <select id="pop-reason-preset" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl mb-1.5 font-medium">
             <option value="Target Achieved">Target Progress Achieved Normal</option>
             <option value="Chamber Trip / Cutoff">Chamber Trip / Cutoff</option>
             <option value="Power Failure">Power Outage / Mains Cut</option>
-            <option value="Parts / Component Missing">Parts Missing</option>
-            <option value="Fixture Loose / Setup Issue">Fixture Adjustment Needed</option>
+            <option value="Parts Missing">Parts / Components Missing</option>
           </select>
           <textarea id="pop-reason-text" rows="2" placeholder="Describe reason if progress is low or blocked..." class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl text-xs"></textarea>
         </div>
@@ -271,7 +458,7 @@
 
       <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
         <button onclick="closeModal()" class="bg-slate-100 text-slate-600 font-semibold px-4 py-2 rounded-xl text-xs">Cancel</button>
-        <button onclick="submitProgressFromModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition">Save Progress</button>
+        <button onclick="submitProgressFromModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl text-xs">Save Progress</button>
       </div>
     </div>
   </div>
@@ -279,6 +466,8 @@
   <script>
     let curLab = "BatteryLab_Tasks";
     let globalTasks = [];
+    let chartCatInstance = null;
+    let chartAssocInstance = null;
 
     function switchLab(labName) {
       curLab = labName;
@@ -291,20 +480,24 @@
       const activeBtn = document.getElementById('btn-lab-' + activeKey);
       if (activeBtn) activeBtn.className = "lab-btn active px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent transition text-slate-600 hover:text-slate-900";
 
+      document.getElementById('lbl-obs-scope').innerText = labName.replace('_Tasks','').toUpperCase();
       fetchTasks();
       fetchAttendance();
+      fetchFlows();
     }
 
     function switchModule(modId) {
-      ['mod-workbench', 'mod-planner', 'mod-dashboard1', 'mod-analytics'].forEach(m => {
+      ['mod-observation', 'mod-workbench', 'mod-planner', 'mod-dashboard1', 'mod-analytics'].forEach(m => {
         document.getElementById(m).classList.add('hidden');
       });
-      ['nav-workbench', 'nav-planner', 'nav-dashboard1', 'nav-analytics'].forEach(n => {
+      ['nav-observation', 'nav-workbench', 'nav-planner', 'nav-dashboard1', 'nav-analytics'].forEach(n => {
         document.getElementById(n).classList.remove('active');
       });
 
       document.getElementById(modId).classList.remove('hidden');
       document.getElementById('nav-' + modId.replace('mod-','')).classList.add('active');
+
+      if (modId === 'mod-dashboard1') renderComponentCharts();
     }
 
     function fetchTasks() {
@@ -313,59 +506,90 @@
         .then(data => {
           globalTasks = data;
           renderKanban();
-          renderMasterMatrix();
+          updateDigitalTwinMap();
         });
     }
 
-    function logAttendance(punchType) {
-      const op = document.getElementById('sel-punch-operator').value;
-      const shift = document.getElementById('sel-shift-filter').value;
-      fetch('/api/attendance_punch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator: op, punch_type: punchType, shift: shift, lab_name: curLab })
-      }).then(() => {
-        alert(`✅ ${punchType} logged for ${op}`);
-        fetchAttendance();
+    function updateDigitalTwinMap() {
+      const eqBoxes = document.querySelectorAll('.eq-box');
+      eqBoxes.forEach(box => {
+        box.className = "eq-box status-idle p-3 rounded-xl border w-32 text-center";
+        const taskSpan = box.querySelector('.eq-task');
+        if (taskSpan) taskSpan.innerText = "IDLE";
+      });
+
+      globalTasks.forEach(t => {
+        if (t.equipment_id && t.equipment_id !== 'Unassigned') {
+          const box = document.getElementById('eq-' + t.equipment_id);
+          if (box) {
+            const st = (t.status || 'To Do').toLowerCase();
+            const taskSpan = box.querySelector('.eq-task');
+
+            if (st.includes('running')) {
+              box.className = "eq-box status-running p-3 rounded-xl border text-center";
+              if (taskSpan) taskSpan.innerText = `${t.completed_units}/${t.target_units} Cycles`;
+            } else if (st.includes('block') || st.includes('resource')) {
+              box.className = "eq-box status-blocked p-3 rounded-xl border text-center";
+              if (taskSpan) taskSpan.innerText = "BLOCKED 🛑";
+            } else {
+              box.className = "eq-box status-paused p-3 rounded-xl border text-center";
+              if (taskSpan) taskSpan.innerText = "PAUSED 🟡";
+            }
+          }
+        }
       });
     }
 
-    function fetchAttendance() {
-      fetch('/api/get_attendance/' + curLab)
+    function clickEquipment(eqId) {
+      const activeTask = globalTasks.find(t => t.equipment_id === eqId);
+      if (activeTask) {
+        alert(`🖥️ EQUIPMENT TELEMETRY: ${eqId}\n\nTask: ${activeTask.dvp_name}\nPack Barcode: ${activeTask.bin_pack}\nStatus: ${activeTask.status}\nCompleted Cycles: ${activeTask.completed_units} / ${activeTask.target_units}\nOperator: ${activeTask.assigned_associate}`);
+      } else {
+        alert(`🖥️ EQUIPMENT TELEMETRY: ${eqId}\n\nStation is currently IDLE and ready for assignment.`);
+      }
+    }
+
+    function fetchFlows() {
+      fetch('/api/get_flows/' + curLab)
         .then(res => res.json())
-        .then(logs => {
-          const tbody = document.getElementById('tbl-attendance-body');
-          tbody.innerHTML = "";
-          logs.forEach(l => {
-            tbody.innerHTML += `
-              <tr class="hover:bg-slate-50/80">
-                <td class="p-3 text-slate-400 font-mono">${l.timestamp}</td>
-                <td class="p-3 text-slate-900 font-semibold">${l.operator}</td>
-                <td class="p-3 text-blue-600 font-medium">${l.shift}</td>
-                <td class="p-3"><span class="${l.punch_type === 'CHECK_IN' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-rose-700 bg-rose-50 border border-rose-200'} px-2 py-0.5 rounded-full font-bold text-[10px]">${l.punch_type}</span></td>
-              </tr>
-            `;
+        .then(flows => {
+          const sel = document.getElementById('inp-blueprint');
+          sel.innerHTML = `<option value="CUSTOM">Custom Single Step</option>`;
+          Object.keys(flows).forEach(flowName => {
+            sel.innerHTML += `<option value="${flowName}">${flowName} (${flows[flowName].length} Steps)</option>`;
           });
         });
     }
 
-    function renderMasterMatrix() {
-      const tbody = document.getElementById('tbl-master-body');
-      tbody.innerHTML = "";
-      const masters = globalTasks.filter(t => !t.parent_id);
-      masters.forEach(m => {
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-50/80">
-            <td class="p-3 font-mono text-blue-600 font-bold">${m.task_id}</td>
-            <td class="p-3 font-semibold text-amber-600">${m.priority}</td>
-            <td class="p-3 text-slate-900 font-semibold">${m.bin_pack}</td>
-            <td class="p-3 text-slate-400">${m.trf_id || 'N/A'}</td>
-            <td class="p-3 text-slate-900 font-semibold">${m.dvp_name}</td>
-            <td class="p-3 text-slate-600">${m.lead_engineer}</td>
-            <td class="p-3"><span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-bold text-[10px]">${m.status}</span></td>
-            <td class="p-3 text-slate-500">${m.observations || ''}</td>
-          </tr>
-        `;
+    function addFlowStepInput() {
+      const container = document.getElementById('flow-steps-container');
+      const idx = container.children.length + 1;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'flow-step-item w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg';
+      input.placeholder = `Step ${idx} Name`;
+      container.appendChild(input);
+    }
+
+    function saveCustomFlow() {
+      const flowName = document.getElementById('flow-name-inp').value.trim();
+      const stepInputs = document.querySelectorAll('.flow-step-item');
+      const steps = [];
+      stepInputs.forEach(i => { if (i.value.trim()) steps.push(i.value.trim()); });
+
+      if (!flowName || !steps.length) {
+        alert("Please enter a flow name and steps.");
+        return;
+      }
+
+      fetch('/api/create_flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lab_name: curLab, flow_name: flowName, steps: steps })
+      }).then(res => res.json()).then(() => {
+        alert("✅ Custom Flow Template Saved!");
+        document.getElementById('flow-name-inp').value = "";
+        fetchFlows();
       });
     }
 
@@ -377,12 +601,7 @@
       colTodo.innerHTML = ""; colRunning.innerHTML = ""; colBlocked.innerHTML = "";
 
       const selectedShift = document.getElementById('sel-shift-filter').value;
-
-      const activeSubs = globalTasks.filter(t => {
-        const isSub = !!t.parent_id;
-        const matchesShift = t.target_shift === selectedShift;
-        return isSub && matchesShift;
-      });
+      const activeSubs = globalTasks.filter(t => !!t.parent_id && t.target_shift === selectedShift);
 
       let cntTodo = 0, cntRunning = 0, cntBlocked = 0;
 
@@ -390,30 +609,30 @@
         const st = (t.status || 'To Do').toLowerCase();
         
         const cardHtml = `
-          <div class="db-card db-card-hover p-4 space-y-3 transition">
+          <div class="db-card p-4 space-y-3 transition">
             <div class="flex justify-between items-center">
               <span class="font-mono text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">${t.task_id}</span>
-              <span class="font-mono text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">${t.bin_pack || 'NO BIN'}</span>
+              <span class="font-mono text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">${t.equipment_id || 'Chamber-1'}</span>
             </div>
 
             <div>
               <span class="text-[10px] font-medium text-slate-400 block">Test Step</span>
               <h4 class="text-xs font-bold text-slate-900 mt-0.5">${t.dvp_name}</h4>
+              <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${t.background || 'No background'}</p>
             </div>
 
             <div class="flex justify-between items-center text-xs bg-slate-50 p-2 rounded-xl border border-slate-100 font-medium">
               <span class="text-slate-500">Progress</span>
-              <span class="text-slate-900 font-mono font-bold">${t.completed_units || 0} / ${t.target_units || 1} Units</span>
+              <span class="text-slate-900 font-mono font-bold">${t.completed_units || 0} / ${t.target_units || 100} Cycles</span>
             </div>
 
             <div>
-              <label class="text-[10px] font-medium text-slate-400 block mb-1">Assigned Operator</label>
+              <label class="text-[10px] font-medium text-slate-400 block mb-1">Operator</label>
               <select onchange="assignAssociate('${t.task_id}', this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-800 font-semibold text-xs p-2 rounded-xl focus:outline-none">
                 <option value="Unassigned" ${t.assigned_associate === 'Unassigned' ? 'selected' : ''}>-- Unassigned --</option>
                 <option value="Sathya" ${t.assigned_associate === 'Sathya' ? 'selected' : ''}>Sathya</option>
                 <option value="Sanjay" ${t.assigned_associate === 'Sanjay' ? 'selected' : ''}>Sanjay</option>
                 <option value="Yosvaraj" ${t.assigned_associate === 'Yosvaraj' ? 'selected' : ''}>Yosvaraj</option>
-                <option value="Bharani" ${t.assigned_associate === 'Bharani' ? 'selected' : ''}>Bharani</option>
               </select>
             </div>
 
@@ -433,17 +652,31 @@
       document.getElementById('count-blocked').innerText = cntBlocked;
     }
 
+    function renderComponentCharts() {
+      const catData = {};
+      globalTasks.forEach(t => { catData[t.category || 'General'] = (catData[t.category || 'General'] || 0) + 1; });
+
+      const ctx1 = document.getElementById('chartCategory').getContext('2d');
+      if (chartCatInstance) chartCatInstance.destroy();
+      chartCatInstance = new Chart(ctx1, {
+        type: 'pie',
+        data: { labels: Object.keys(catData), datasets: [{ data: Object.values(catData), backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6'] }] },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
     function handleCreateTask(e) {
       e.preventDefault();
       const payload = {
         lab_name: curLab,
         bin_pack: document.getElementById('inp-bin').value,
         dvp_name: document.getElementById('inp-dvp').value,
-        priority: document.getElementById('inp-priority').value,
-        trf_id: document.getElementById('inp-trf').value,
+        category: document.getElementById('inp-category').value,
+        equipment_id: document.getElementById('inp-equipment').value,
+        target_units: document.getElementById('inp-target-units').value,
         target_shift: document.getElementById('inp-shift').value,
-        blueprint: document.getElementById('inp-blueprint').value,
-        objective: document.getElementById('inp-objective').value
+        flow_name: document.getElementById('inp-blueprint').value,
+        background: document.getElementById('inp-background').value
       };
 
       fetch('/api/create_task', {
@@ -451,10 +684,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).then(res => res.json()).then(data => {
-        alert("✅ Master Task [" + data.master_id + "] created!");
+        alert("✅ Task Generated & Assigned to Floor Layout Station!");
         document.getElementById('form-create-task').reset();
         fetchTasks();
-        switchModule('mod-workbench');
+        switchModule('mod-observation');
       });
     }
 
@@ -475,9 +708,7 @@
       document.getElementById('modal-progress').classList.remove('hidden');
     }
 
-    function closeModal() {
-      document.getElementById('modal-progress').classList.add('hidden');
-    }
+    function closeModal() { document.getElementById('modal-progress').classList.add('hidden'); }
 
     function submitProgressFromModal() {
       const taskId = document.getElementById('pop-task-id').value;
@@ -488,36 +719,83 @@
       const note = document.getElementById('pop-reason-text').value.trim();
 
       const shiftProgress = newUnits - prevUnits;
-      const isBlocked = status.includes('Awaiting');
-
-      if ((shiftProgress < 2 && status !== 'Complete') || isBlocked) {
+      if ((shiftProgress < 2 && status !== 'Complete') || status.includes('Awaiting')) {
         if (!note && preset === 'Target Achieved') {
           alert("🛑 REASON REQUIRED:\nProgress this shift is below target. Please provide a reason for the delay.");
           return;
         }
       }
 
-      const fullReason = `[Progress: ${shiftProgress} units | Reason: ${preset}] ${note}`;
-
       fetch('/api/update_progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          task_id: taskId,
-          completed_units: newUnits,
-          status: status,
-          reason: fullReason,
-          shift: document.getElementById('sel-shift-filter').value,
-          lab_name: curLab
+          task_id: taskId, completed_units: newUnits, status: status,
+          reason: `[Progress: ${shiftProgress} | Reason: ${preset}] ${note}`,
+          shift: document.getElementById('sel-shift-filter').value, lab_name: curLab
         })
-      }).then(res => res.json()).then(() => {
-        closeModal();
-        fetchTasks();
+      }).then(res => res.json()).then(() => { closeModal(); fetchTasks(); });
+    }
+
+    function logAttendance(punchType) {
+      const op = document.getElementById('sel-punch-operator').value;
+      const shift = document.getElementById('sel-shift-filter').value;
+      fetch('/api/attendance_punch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operator: op, punch_type: punchType, shift: shift, lab_name: curLab, s5_verified: 0 })
+      }).then(() => { alert(`✅ ${punchType} logged for ${op}`); fetchAttendance(); });
+    }
+
+    function open5SModal() { document.getElementById('modal-5s').classList.remove('hidden'); }
+    function close5SModal() { document.getElementById('modal-5s').classList.add('hidden'); }
+
+    function submit5SClockOut() {
+      const checkboxes = document.querySelectorAll('.chk-5s');
+      let allChecked = true;
+      checkboxes.forEach(c => { if (!c.checked) allChecked = false; });
+
+      if (!allChecked) {
+        alert("🛑 5S VERIFICATION REQUIRED:\nYou must verify all 5 workstation handover checklist items before clocking out.");
+        return;
+      }
+
+      const op = document.getElementById('sel-punch-operator').value;
+      const shift = document.getElementById('sel-shift-filter').value;
+      fetch('/api/attendance_punch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operator: op, punch_type: 'CHECK_OUT', shift: shift, lab_name: curLab, s5_verified: 1 })
+      }).then(() => {
+        close5SModal();
+        alert(`✅ 5S Verified Clock-Out completed for ${op}!`);
+        fetchAttendance();
       });
+    }
+
+    function fetchAttendance() {
+      fetch('/api/get_attendance/' + curLab)
+        .then(res => res.json())
+        .then(logs => {
+          const tbody = document.getElementById('tbl-attendance-body');
+          tbody.innerHTML = "";
+          logs.forEach(l => {
+            tbody.innerHTML += `
+              <tr class="hover:bg-slate-50/80">
+                <td class="p-3 text-slate-400 font-mono">${l.timestamp}</td>
+                <td class="p-3 text-slate-900 font-semibold">${l.operator}</td>
+                <td class="p-3 text-blue-600 font-medium">${l.shift}</td>
+                <td class="p-3"><span class="${l.punch_type === 'CHECK_IN' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-rose-700 bg-rose-50 border border-rose-200'} px-2 py-0.5 rounded-full font-bold text-[10px]">${l.punch_type}</span></td>
+                <td class="p-3">${l.s5_verified ? '✅ Verified' : '—'}</td>
+              </tr>
+            `;
+          });
+        });
     }
 
     fetchTasks();
     fetchAttendance();
+    fetchFlows();
   </script>
 </body>
 </html>
