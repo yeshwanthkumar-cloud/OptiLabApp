@@ -7,7 +7,7 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
     
-    # Master Tasks Table
+    # Master Tasks Table (Supports Priority P1-P3, BINs, Sprints, Subtasks)
     c.execute('''
         CREATE TABLE IF NOT EXISTS master_tasks (
             task_id TEXT PRIMARY KEY,
@@ -23,6 +23,7 @@ def init_db():
             shift_incharge TEXT,
             assigned_associate TEXT,
             target_shift TEXT,
+            assign_date TEXT,
             target_units INTEGER,
             completed_units INTEGER,
             unit_type TEXT,
@@ -30,11 +31,12 @@ def init_db():
             progress_percent TEXT,
             status TEXT,
             background TEXT,
-            observations TEXT
+            observations TEXT,
+            target_end_date TEXT
         )
     ''')
-    
-    # Dynamic Test Flows Table
+
+    # Custom Dynamic Test Flows (Top-Right Task Flow Creator)
     c.execute('''
         CREATE TABLE IF NOT EXISTS custom_flows (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +47,36 @@ def init_db():
         )
     ''')
 
-    # Attendance & 5S Ledger
+    # Registered Associates per Lab
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS associates_master (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lab_name TEXT,
+            associate_name TEXT
+        )
+    ''')
+
+    # Tested Component Categories
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS components_master (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lab_name TEXT,
+            component_name TEXT
+        )
+    ''')
+
+    # Monthly Shift Roster
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS shift_roster (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lab_name TEXT,
+            operator_name TEXT,
+            assigned_shift TEXT,
+            effective_month TEXT
+        )
+    ''')
+
+    # Attendance & 5S Handover Ledger
     c.execute('''
         CREATE TABLE IF NOT EXISTS attendance_ledger (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,7 +89,7 @@ def init_db():
         )
     ''')
 
-    # Audit History Log
+    # Audit History & Shift Notes Log
     c.execute('''
         CREATE TABLE IF NOT EXISTS audit_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,30 +103,51 @@ def init_db():
         )
     ''')
 
-    # Seed Initial Default Flows if empty
+    # Seed Default Associates
+    c.execute("SELECT COUNT(*) FROM associates_master")
+    if c.fetchone()[0] == 0:
+        assoc_seeds = [
+            ('BatteryLab_Tasks', 'Sathya'),
+            ('BatteryLab_Tasks', 'Sanjay'),
+            ('BatteryLab_Tasks', 'Yosvaraj'),
+            ('BatteryLab_Tasks', 'Bharani'),
+            ('CellLab_Tasks', 'Arun'),
+            ('CellLab_Tasks', 'Karthik'),
+            ('Vibration_Tasks', 'Vignesh'),
+            ('EELab_Tasks', 'Deepak')
+        ]
+        c.executemany("INSERT INTO associates_master (lab_name, associate_name) VALUES (?, ?)", assoc_seeds)
+
+    # Seed Default Tested Components
+    c.execute("SELECT COUNT(*) FROM components_master")
+    if c.fetchone()[0] == 0:
+        comp_seeds = [
+            ('BatteryLab_Tasks', '450 Pack'),
+            ('BatteryLab_Tasks', 'DIESEL Pack'),
+            ('BatteryLab_Tasks', 'EL Pack'),
+            ('CellLab_Tasks', 'NMC Cell'),
+            ('CellLab_Tasks', 'LFP Cell'),
+            ('Vibration_Tasks', 'Mounting Bracket'),
+            ('EELab_Tasks', 'BMS Board')
+        ]
+        c.executemany("INSERT INTO components_master (lab_name, component_name) VALUES (?, ?)", comp_seeds)
+
+    # Seed Default Flow Blueprints
     c.execute("SELECT COUNT(*) FROM custom_flows")
     if c.fetchone()[0] == 0:
-        default_flows = [
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 1, 'Pre-Test Inspection & Capacity'),
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 2, 'Thermal Life Cycle Run'),
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 3, 'Post-Capacity Check'),
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 4, 'Air Leak & Insulation Test'),
-            ('CellLab_Tasks', 'Cell Formation Standard', 1, 'Electrolyte Wetting'),
-            ('CellLab_Tasks', 'Cell Formation Standard', 2, 'Initial C-Rate Formation'),
-            ('CellLab_Tasks', 'Cell Formation Standard', 3, 'Degassing & Sealing'),
-            ('Vibration_Tasks', 'Standard Vibration Flow', 1, 'DUT Mounting & Sensors'),
-            ('Vibration_Tasks', 'Standard Vibration Flow', 2, 'X-Axis Sine Sweep'),
-            ('Vibration_Tasks', 'Standard Vibration Flow', 3, 'Y-Axis Random Run'),
-            ('Vibration_Tasks', 'Standard Vibration Flow', 4, 'Z-Axis Shock Test'),
-            ('EELab_Tasks', 'BMS Stress Validation', 1, 'CAN Baud Rate Check'),
-            ('EELab_Tasks', 'BMS Stress Validation', 2, 'High Current Discharge Run'),
-            ('EELab_Tasks', 'BMS Stress Validation', 3, 'Thermal Cutoff Verification')
+        flow_seeds = [
+            ('BatteryLab_Tasks', 'TL-2', 1, 'Pre-Test Check'),
+            ('BatteryLab_Tasks', 'TL-2', 2, 'Pre-Capacity'),
+            ('BatteryLab_Tasks', 'TL-2', 3, 'Thermal Cycling'),
+            ('BatteryLab_Tasks', 'TL-9', 1, 'Pre-Test Inspection'),
+            ('BatteryLab_Tasks', 'TL-9', 2, 'Life Cycle Run'),
+            ('BatteryLab_Tasks', 'TL-9', 3, 'Post Capacity Check')
         ]
-        c.executemany("INSERT INTO custom_flows (lab_name, flow_name, step_order, step_name) VALUES (?, ?, ?, ?)", default_flows)
+        c.executemany("INSERT INTO custom_flows (lab_name, flow_name, step_order, step_name) VALUES (?, ?, ?, ?)", flow_seeds)
 
     conn.commit()
     conn.close()
 
 if __name__ == "__main__":
     init_db()
-    print("✅ Database initialized successfully with Equipment Mapping & Dynamic Flows!")
+    print("✅ Database initialized successfully!")
