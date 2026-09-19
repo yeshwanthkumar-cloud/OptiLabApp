@@ -7,7 +7,7 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
     
-    # Master Tasks Table (Supports Priority P1-P3, BINs, Sprints, Subtasks)
+    # Master Tasks & Nested Subtasks Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS master_tasks (
             task_id TEXT PRIMARY KEY,
@@ -27,7 +27,8 @@ def init_db():
             target_units INTEGER,
             completed_units INTEGER,
             unit_type TEXT,
-            equipment_id TEXT,
+            chamber_id TEXT,
+            cycler_id TEXT,
             progress_percent TEXT,
             status TEXT,
             background TEXT,
@@ -36,7 +37,7 @@ def init_db():
         )
     ''')
 
-    # Custom Dynamic Test Flows (Top-Right Task Flow Creator)
+    # Custom Dynamic Test Flows
     c.execute('''
         CREATE TABLE IF NOT EXISTS custom_flows (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,12 +48,13 @@ def init_db():
         )
     ''')
 
-    # Registered Associates per Lab
+    # Registered Associates Master
     c.execute('''
         CREATE TABLE IF NOT EXISTS associates_master (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             lab_name TEXT,
-            associate_name TEXT
+            associate_name TEXT,
+            role_title TEXT DEFAULT 'Associate'
         )
     ''')
 
@@ -65,18 +67,23 @@ def init_db():
         )
     ''')
 
-    # Monthly Shift Roster
+    # Monthly Grid Shift Roster (Days 1 to 31)
     c.execute('''
-        CREATE TABLE IF NOT EXISTS shift_roster (
+        CREATE TABLE IF NOT EXISTS monthly_roster_matrix (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             lab_name TEXT,
             operator_name TEXT,
-            assigned_shift TEXT,
-            effective_month TEXT
+            year_month TEXT,
+            day_1 TEXT DEFAULT 'A', day_2 TEXT DEFAULT 'A', day_3 TEXT DEFAULT 'A', day_4 TEXT DEFAULT 'A', day_5 TEXT DEFAULT 'A',
+            day_6 TEXT DEFAULT 'O', day_7 TEXT DEFAULT 'O', day_8 TEXT DEFAULT 'B', day_9 TEXT DEFAULT 'B', day_10 TEXT DEFAULT 'B',
+            day_11 TEXT DEFAULT 'B', day_12 TEXT DEFAULT 'B', day_13 TEXT DEFAULT 'O', day_14 TEXT DEFAULT 'O', day_15 TEXT DEFAULT 'C',
+            day_16 TEXT DEFAULT 'C', day_17 TEXT DEFAULT 'C', day_18 TEXT DEFAULT 'C', day_19 TEXT DEFAULT 'C', day_20 TEXT DEFAULT 'O',
+            day_21 TEXT DEFAULT 'O', day_22 TEXT DEFAULT 'A', day_23 TEXT DEFAULT 'A', day_24 TEXT DEFAULT 'A', day_25 TEXT DEFAULT 'A',
+            day_26 TEXT DEFAULT 'A', day_27 TEXT DEFAULT 'O', day_28 TEXT DEFAULT 'O', day_29 TEXT DEFAULT 'A', day_30 TEXT DEFAULT 'A', day_31 TEXT DEFAULT 'A'
         )
     ''')
 
-    # Attendance & 5S Handover Ledger
+    # Attendance Ledger
     c.execute('''
         CREATE TABLE IF NOT EXISTS attendance_ledger (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,7 +96,7 @@ def init_db():
         )
     ''')
 
-    # Audit History & Shift Notes Log
+    # Audit History Log
     c.execute('''
         CREATE TABLE IF NOT EXISTS audit_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,22 +110,38 @@ def init_db():
         )
     ''')
 
-    # Seed Default Associates
+    # Seed Default Associates if empty
     c.execute("SELECT COUNT(*) FROM associates_master")
     if c.fetchone()[0] == 0:
         assoc_seeds = [
-            ('BatteryLab_Tasks', 'Sathya'),
-            ('BatteryLab_Tasks', 'Sanjay'),
-            ('BatteryLab_Tasks', 'Yosvaraj'),
-            ('BatteryLab_Tasks', 'Bharani'),
-            ('CellLab_Tasks', 'Arun'),
-            ('CellLab_Tasks', 'Karthik'),
-            ('Vibration_Tasks', 'Vignesh'),
-            ('EELab_Tasks', 'Deepak')
+            ('BatteryLab_Tasks', 'Sathya', 'Technician'),
+            ('BatteryLab_Tasks', 'Sanjay', 'Technician'),
+            ('BatteryLab_Tasks', 'Yosvaraj', 'Technician'),
+            ('BatteryLab_Tasks', 'Bharani', 'Technician'),
+            ('BatteryLab_Tasks', 'Praveen kumar', 'Shift Incharge'),
+            ('BatteryLab_Tasks', 'Raja', 'Shift Incharge'),
+            ('BatteryLab_Tasks', 'Riyaz', 'Shift Incharge'),
+            ('CellLab_Tasks', 'Arun', 'Technician'),
+            ('CellLab_Tasks', 'Karthik', 'Technician'),
+            ('Vibration_Tasks', 'Vignesh', 'Technician'),
+            ('EELab_Tasks', 'Deepak', 'Technician')
         ]
-        c.executemany("INSERT INTO associates_master (lab_name, associate_name) VALUES (?, ?)", assoc_seeds)
+        c.executemany("INSERT INTO associates_master (lab_name, associate_name, role_title) VALUES (?, ?, ?)", assoc_seeds)
 
-    # Seed Default Tested Components
+    # Seed Default Roster Matrix for Battery Lab
+    c.execute("SELECT COUNT(*) FROM monthly_roster_matrix")
+    if c.fetchone()[0] == 0:
+        roster_seeds = [
+            ('BatteryLab_Tasks', 'Sathya', '2026-09'),
+            ('BatteryLab_Tasks', 'Sanjay', '2026-09'),
+            ('BatteryLab_Tasks', 'Yosvaraj', '2026-09'),
+            ('BatteryLab_Tasks', 'Bharani', '2026-09'),
+            ('BatteryLab_Tasks', 'Praveen kumar', '2026-09'),
+            ('BatteryLab_Tasks', 'Raja', '2026-09')
+        ]
+        c.executemany("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", roster_seeds)
+
+    # Seed Default Components if empty
     c.execute("SELECT COUNT(*) FROM components_master")
     if c.fetchone()[0] == 0:
         comp_seeds = [
