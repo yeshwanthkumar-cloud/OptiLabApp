@@ -20,7 +20,6 @@
     .dept-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .dept-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08); }
     
-    /* ROSTER MATRIX STYLES MATCHING SCREENSHOT */
     .rst-cell { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
     .rst-cell-A { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
     .rst-cell-B { background-color: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
@@ -82,25 +81,153 @@
     </header>
 
     <nav class="bg-white border-b border-slate-200/80 px-8 flex gap-8 shrink-0">
-      <button onclick="switchModule('mod-observation')" id="nav-observation" class="nav-tab active py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">🗺️ Floor Layout Twin</button>
-      <button onclick="switchModule('mod-workbench')" id="nav-workbench" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">☀️ Shift Workbench</button>
+      <button onclick="switchModule('mod-planner')" id="nav-planner" class="nav-tab active py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📋 Task Planner & Masters Desk</button>
       <button onclick="switchModule('mod-exec-dashboard')" id="nav-exec-dashboard" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📊 Executive Dashboard & Flow Deck</button>
+      <button onclick="switchModule('mod-observation')" id="nav-observation" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">🗺️ Floor Layout Twin</button>
+      <button onclick="switchModule('mod-workbench')" id="nav-workbench" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">☀️ Shift Workbench</button>
       <button onclick="switchModule('mod-roster')" id="nav-roster" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📅 Monthly Staff Rotation Schedule</button>
       <button onclick="switchModule('mod-history')" id="nav-history" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📜 Task History Log</button>
-      <button onclick="switchModule('mod-planner')" id="nav-planner" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📋 Task Planner & Masters Desk</button>
-      <button onclick="switchModule('mod-analytics')" id="nav-analytics" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📈 Attendance & Scorecard</button>
+      <button onclick="switchModule('mod-analytics')" id="nav-analytics" class="nav-tab py-3 text-xs font-semibold text-slate-500 hover:text-slate-900 transition">📈 Analytics & Shift Efficiency</button>
     </nav>
 
     <div class="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto space-y-6">
 
-      <!-- VIEW 1: FLOOR LAYOUT TWIN -->
-      <section id="mod-observation" class="space-y-6">
+      <!-- VIEW 1: TASK PLANNER -->
+      <section id="mod-planner" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 db-card p-6 space-y-6">
+            <h2 class="text-base font-bold text-slate-900">Create Master DVP Blueprint Task</h2>
+            <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-4 text-xs">
+              <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-slate-500 font-medium mb-1">BIN / Serial No. *</label><input type="text" id="inp-bin" required placeholder="e.g. 450-9702" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></div>
+                <div><label class="block text-slate-500 font-medium mb-1">DVP Test Name *</label><input type="text" id="inp-dvp" required placeholder="e.g. TL-9" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-slate-500 font-medium mb-1">Tested Component Category *</label><select id="inp-category" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></select></div>
+                <div>
+                  <label class="block text-slate-500 font-medium mb-1">Priority *</label>
+                  <select id="inp-priority" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
+                    <option value="P1">P1 - Critical</option>
+                    <option value="P2">P2 - High</option>
+                    <option value="P3">P3 - Medium</option>
+                  </select>
+                </div>
+              </div>
+
+              <div><label class="block text-slate-500 font-medium mb-1">Select Reusable Flow Blueprint *</label><select id="inp-blueprint" class="w-full bg-slate-50 border border-slate-200 text-blue-600 font-bold p-2.5 rounded-xl"><option value="CUSTOM">Custom Single Step</option></select></div>
+              <div><label class="block text-slate-500 font-medium mb-1">Test Objective & Background *</label><textarea id="inp-background" required rows="3" placeholder="Describe engineering purpose..." class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea></div>
+
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-md">Generate Master Task Blueprint ➔</button>
+            </form>
+          </div>
+
+          <div class="space-y-6">
+            <div class="db-card p-5 space-y-4 border-l-4 border-l-purple-600 shadow-sm">
+              <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center justify-between"><span>🛠️ Task Flow Creator</span></h3>
+              <div class="space-y-2.5 text-xs">
+                <input type="text" id="flow-name-inp" placeholder="Flow Name (e.g. TL-1)" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg font-semibold">
+                <div id="flow-steps-container" class="space-y-2">
+                  <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg" placeholder="1. Pre-Capacity Check">
+                  <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg" placeholder="2. Pre-Aging Chamber Soak">
+                </div>
+                <div class="flex gap-2 pt-1">
+                  <button onclick="addFlowStepInput()" type="button" class="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg text-xs">+ Step</button>
+                  <button onclick="saveCustomFlow()" type="button" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1.5 rounded-lg text-xs">Save Flow Template</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="db-card p-5 space-y-4 shadow-sm border-l-4 border-l-blue-600">
+              <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">➕ Register Lab Masters (Roster Auto-Sync)</h3>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="block text-slate-500 font-bold mb-1">Add New Associate Name</label>
+                  <div class="flex gap-2">
+                    <input type="text" id="inp-assoc-name" placeholder="e.g. Riyaz" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg font-bold">
+                    <select id="inp-assoc-role" class="bg-slate-50 border border-slate-200 p-2 rounded-lg font-bold">
+                      <option value="Technician">Technician</option>
+                      <option value="Shift Incharge">Shift Incharge</option>
+                    </select>
+                    <button onclick="registerAssociate()" class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg shrink-0">Add</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-slate-500 font-bold mb-1">Add Tested Component Category</label>
+                  <div class="flex gap-2">
+                    <input type="text" id="inp-comp-name" placeholder="e.g. 450 Pack" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg font-bold">
+                    <button onclick="registerComponent()" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg shrink-0">Add</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: EXECUTIVE DASHBOARD -->
+      <section id="mod-exec-dashboard" class="hidden space-y-6">
+        <div class="db-card p-4 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 flex-1">
+            <input type="text" id="inp-search-filter" onkeyup="renderExecDashboard()" placeholder="Search TRF, BIN, or Project..." class="bg-slate-50 border border-slate-200 text-slate-900 font-medium text-xs p-2.5 rounded-xl w-64">
+            <select id="sel-sprint-filter" onchange="renderExecDashboard()" class="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs p-2.5 rounded-xl">
+              <option value="ALL">Sprint: All Sprints</option>
+              <option value="27.2.1">Sprint 27.2.1</option>
+              <option value="27.2.2">Sprint 27.2.2</option>
+            </select>
+          </div>
+          <span id="lbl-result-count" class="text-xs font-bold text-slate-400">Displaying 0 results</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="db-card p-5 space-y-1"><span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">COMPLETE</span><span id="card-cnt-complete" class="text-3xl font-black text-slate-900 block">0</span></div>
+          <div class="db-card p-5 space-y-1 border-2 border-blue-500 shadow-sm"><span class="text-[10px] font-black text-blue-600 uppercase tracking-wider block">RUNNING</span><span id="card-cnt-running" class="text-3xl font-black text-slate-900 block">0</span></div>
+          <div class="db-card p-5 space-y-1"><span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">AWAITING RESOURCE</span><span id="card-cnt-awaiting-res" class="text-3xl font-black text-slate-900 block">0</span></div>
+          <div class="db-card p-5 space-y-1"><span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">AWAITING ENG ACTION</span><span id="card-cnt-awaiting-eng" class="text-3xl font-black text-slate-900 block">0</span></div>
+        </div>
+
+        <div class="db-card p-6 space-y-4">
+          <div class="border-b border-slate-100 pb-2"><h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">📦 COMPONENT / PACK DONUT DISTRIBUTION</h3></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2"><span class="text-xs font-black text-slate-800 uppercase block">450 STATUS</span><div class="h-44 flex items-center justify-center"><canvas id="chart450"></canvas></div></div>
+            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2"><span class="text-xs font-black text-slate-800 uppercase block">DIESEL STATUS</span><div class="h-44 flex items-center justify-center"><canvas id="chartDiesel"></canvas></div></div>
+            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2"><span class="text-xs font-black text-slate-800 uppercase block">EL STATUS</span><div class="h-44 flex items-center justify-center"><canvas id="chartEL"></canvas></div></div>
+          </div>
+        </div>
+
+        <div class="db-card overflow-hidden">
+          <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Master DVP Execution Matrix</h3>
+            <span class="text-[11px] font-bold text-slate-400">Click 👁️ to view detailed observations</span>
+          </div>
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase text-slate-400 font-extrabold">
+              <tr>
+                <th class="p-3">TASK ID</th>
+                <th class="p-3">PRIO</th>
+                <th class="p-3">BIN NO.</th>
+                <th class="p-3">TRF REF</th>
+                <th class="p-3">DVP TEST NAME</th>
+                <th class="p-3">TEST OBJECTIVE & BACKGROUND</th>
+                <th class="p-3">ENGINEER</th>
+                <th class="p-3">PROGRESS</th>
+                <th class="p-3">STATUS</th>
+                <th class="p-3">OBSERVATIONS</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-master-exec-body" class="divide-y divide-slate-100 font-semibold text-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VIEW 3: FLOOR LAYOUT TWIN -->
+      <section id="mod-observation" class="hidden space-y-6">
         <div class="db-card p-4 flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-slate-800">Observation Scope:</span>
             <span id="lbl-obs-scope" class="text-xs font-black text-blue-600 uppercase">BATTERY LAB</span>
           </div>
-
           <div class="flex items-center gap-4 text-xs font-semibold">
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-600"></span> Running 🟢</span>
             <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 border border-amber-500"></span> Paused 🟡</span>
@@ -109,13 +236,10 @@
           </div>
         </div>
 
-        <!-- ROOM-1 SCHEMATIC -->
         <div class="db-card p-6 space-y-6 overflow-x-auto">
           <div class="flex justify-between items-center border-b border-slate-200 pb-2">
             <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Room-1 Battery Lab Visual Floor Layout</h3>
-            <span class="text-[11px] font-medium text-slate-500">Live Equipment Grid</span>
           </div>
-
           <div class="min-w-[950px] space-y-4">
             <div class="flex items-center justify-between gap-2">
               <div id="eq-Chamber-3" class="eq-box status-idle p-3 rounded-xl border w-28 text-center bg-amber-50/50"><span class="text-[10px] font-bold block">Chamber-3</span><span class="eq-task font-mono text-[10px] font-black block mt-1">IDLE</span></div>
@@ -156,36 +280,9 @@
             </div>
           </div>
         </div>
-
-        <!-- ROOM-2 SCHEMATIC -->
-        <div class="db-card p-6 space-y-4 overflow-x-auto">
-          <div class="border-b border-slate-200 pb-2">
-            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Room-2 Battery Lab Visual Floor Layout</h3>
-          </div>
-
-          <div class="min-w-[950px] space-y-4">
-            <div class="flex items-center justify-center gap-8">
-              <div id="eq-Air-Leak" class="eq-box status-idle p-4 rounded-xl border w-36 text-center bg-white"><span class="text-[10px] font-bold block">Air leak tester</span><span class="eq-task font-mono text-[10px] font-black block mt-1">IDLE</span></div>
-              <div class="flex flex-col items-center">
-                <div class="flex gap-1 bg-slate-200 p-1 rounded-t-lg border border-slate-300">
-                  <span class="px-2 py-0.5 text-[9px] font-bold bg-white rounded">1</span>
-                  <span class="px-2 py-0.5 text-[9px] font-bold bg-white rounded">2</span>
-                  <span class="px-2 py-0.5 text-[9px] font-bold bg-white rounded">3</span>
-                  <span class="px-2 py-0.5 text-[9px] font-bold bg-white rounded">4</span>
-                </div>
-                <div id="eq-4-Channel" class="eq-box status-idle p-2 rounded-b-xl border w-44 text-center bg-blue-600 text-white"><span class="text-[10px] font-black block">4 Channel</span></div>
-              </div>
-              <div id="eq-Neware-Room2" class="eq-box status-idle p-4 rounded-xl border w-36 text-center bg-emerald-50"><span class="text-[10px] font-bold block">Neware Cycler</span><span class="eq-task font-mono text-[10px] font-black block mt-1">IDLE</span></div>
-            </div>
-
-            <div class="w-full bg-emerald-500 h-8 rounded-xl border-y-4 border-amber-400 flex items-center justify-center font-black text-white text-[10px] tracking-widest uppercase">
-              ROOM-2 SECONDARY GANGWAY
-            </div>
-          </div>
-        </div>
       </section>
 
-      <!-- VIEW 2: SHIFT WORKBENCH -->
+      <!-- VIEW 4: SHIFT WORKBENCH -->
       <section id="mod-workbench" class="hidden space-y-6">
         <div class="db-card p-5 flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-3.5">
@@ -206,7 +303,6 @@
               <option value="Shift C">Shift C (22:00 - 06:00)</option>
             </select>
 
-            <!-- ROSTER-VALIDATED OPERATOR DROPDOWN -->
             <select id="sel-punch-operator" class="bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs p-2.5 rounded-xl"></select>
 
             <button onclick="clockInOperator()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5">
@@ -265,62 +361,7 @@
         </div>
       </section>
 
-      <!-- VIEW 3: EXECUTIVE DASHBOARD -->
-      <section id="mod-exec-dashboard" class="hidden space-y-6">
-        <div class="db-card p-4 flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3 flex-1">
-            <input type="text" id="inp-search-filter" onkeyup="renderExecDashboard()" placeholder="Search TRF, BIN, or Project..." class="bg-slate-50 border border-slate-200 text-slate-900 font-medium text-xs p-2.5 rounded-xl w-64">
-            <select id="sel-sprint-filter" onchange="renderExecDashboard()" class="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs p-2.5 rounded-xl">
-              <option value="ALL">Sprint: All Sprints</option>
-              <option value="27.2.1">Sprint 27.2.1</option>
-              <option value="27.2.2">Sprint 27.2.2</option>
-            </select>
-          </div>
-          <span id="lbl-result-count" class="text-xs font-bold text-slate-400">Displaying 0 results</span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="db-card p-5 space-y-1"><span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">COMPLETE</span><span id="card-cnt-complete" class="text-3xl font-black text-slate-900 block">0</span></div>
-          <div class="db-card p-5 space-y-1 border-2 border-blue-500 shadow-sm"><span class="text-[10px] font-black text-blue-600 uppercase tracking-wider block">RUNNING</span><span id="card-cnt-running" class="text-3xl font-black text-slate-900 block">0</span></div>
-          <div class="db-card p-5 space-y-1"><span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">AWAITING RESOURCE</span><span id="card-cnt-awaiting-res" class="text-3xl font-black text-slate-900 block">0</span></div>
-          <div class="db-card p-5 space-y-1"><span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">AWAITING ENG ACTION</span><span id="card-cnt-awaiting-eng" class="text-3xl font-black text-slate-900 block">0</span></div>
-        </div>
-
-        <div class="db-card p-6 space-y-4">
-          <div class="border-b border-slate-100 pb-2"><h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">📦 COMPONENT / PACK DONUT DISTRIBUTION</h3></div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2"><span class="text-xs font-black text-slate-800 uppercase block">450 STATUS</span><div class="h-44 flex items-center justify-center"><canvas id="chart450"></canvas></div></div>
-            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2"><span class="text-xs font-black text-slate-800 uppercase block">DIESEL STATUS</span><div class="h-44 flex items-center justify-center"><canvas id="chartDiesel"></canvas></div></div>
-            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2"><span class="text-xs font-black text-slate-800 uppercase block">EL STATUS</span><div class="h-44 flex items-center justify-center"><canvas id="chartEL"></canvas></div></div>
-          </div>
-        </div>
-
-        <div class="db-card overflow-hidden">
-          <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Master DVP Execution Matrix</h3>
-            <span class="text-[11px] font-bold text-slate-400">Click 👁️ to view detailed floor findings</span>
-          </div>
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase text-slate-400 font-extrabold">
-              <tr>
-                <th class="p-3">TASK ID</th>
-                <th class="p-3">PRIO</th>
-                <th class="p-3">BIN NO.</th>
-                <th class="p-3">TRF REF</th>
-                <th class="p-3">DVP TEST NAME</th>
-                <th class="p-3">TEST OBJECTIVE & BACKGROUND</th>
-                <th class="p-3">ENGINEER</th>
-                <th class="p-3">PROGRESS</th>
-                <th class="p-3">STATUS</th>
-                <th class="p-3">OBSERVATIONS</th>
-              </tr>
-            </thead>
-            <tbody id="tbl-master-exec-body" class="divide-y divide-slate-100 font-semibold text-slate-800"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- VIEW 4: MONTHLY STAFF ROTATION MATRIX ROSTER -->
+      <!-- VIEW 5: MONTHLY STAFF ROTATION MATRIX ROSTER -->
       <section id="mod-roster" class="hidden space-y-6">
         <div class="db-card p-6 space-y-6">
           <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-4 gap-4">
@@ -358,7 +399,7 @@
         </div>
       </section>
 
-      <!-- VIEW 5: TASK HISTORY LOG -->
+      <!-- VIEW 6: TASK HISTORY LOG -->
       <section id="mod-history" class="hidden space-y-6">
         <div class="db-card overflow-hidden">
           <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
@@ -380,90 +421,49 @@
         </div>
       </section>
 
-      <!-- VIEW 6: TASK PLANNER & REGISTER LAB MASTERS DESK -->
-      <section id="mod-planner" class="hidden space-y-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <div class="lg:col-span-2 db-card p-6 space-y-6">
-            <h2 class="text-base font-bold text-slate-900">Create Master DVP Blueprint Task</h2>
-            <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-4 text-xs">
-              <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-slate-500 font-medium mb-1">BIN / Serial No. *</label><input type="text" id="inp-bin" required placeholder="e.g. 450-9702" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></div>
-                <div><label class="block text-slate-500 font-medium mb-1">DVP Test Name *</label><input type="text" id="inp-dvp" required placeholder="e.g. TL-9" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></div>
-              </div>
-
-              <div class="grid grid-cols-3 gap-4">
-                <div><label class="block text-slate-500 font-medium mb-1">Tested Component *</label><select id="inp-category" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></select></div>
-                <div><label class="block text-slate-500 font-medium mb-1">Default Chamber *</label><select id="inp-chamber" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"><option value="Chamber-1">Chamber-1</option><option value="Chamber-3">Chamber-3</option><option value="Chamber-4">Chamber-4</option><option value="Chamber-7">Chamber-7</option><option value="Chamber-8">Chamber-8</option><option value="Hiacc">Hiacc</option></select></div>
-                <div><label class="block text-slate-500 font-medium mb-1">Default Cycler *</label><select id="inp-cycler" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"><option value="EA Cycler #1">EA Cycler #1</option><option value="EA Cycler #2">EA Cycler #2</option><option value="ITECH Cycler">ITECH Cycler</option></select></div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-slate-500 font-medium mb-1">Target Units / Hours per Step *</label><input type="number" id="inp-target-units" required value="100" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold"></div>
-                <div><label class="block text-slate-500 font-medium mb-1">Unit Type *</label><select id="inp-unit-type" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"><option value="Cycles">Cycles</option><option value="Hours">Hours</option></select></div>
-              </div>
-
-              <div><label class="block text-slate-500 font-medium mb-1">Select Reusable Flow Blueprint *</label><select id="inp-blueprint" class="w-full bg-slate-50 border border-slate-200 text-blue-600 font-bold p-2.5 rounded-xl"><option value="CUSTOM">Custom Single Step</option></select></div>
-              <div><label class="block text-slate-500 font-medium mb-1">Test Objective & Background *</label><textarea id="inp-background" required rows="2" placeholder="e.g. 11P life cycle pack" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea></div>
-
-              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl text-xs shadow-sm">Generate Master Task & Steps</button>
-            </form>
-          </div>
-
-          <div class="space-y-6">
-            <div class="db-card p-5 space-y-4 border-l-4 border-l-purple-600 shadow-sm">
-              <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center justify-between"><span>🛠️ Task Flow Creator</span></h3>
-              <div class="space-y-2.5 text-xs">
-                <input type="text" id="flow-name-inp" placeholder="Flow Name (e.g. TL-9)" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg font-semibold">
-                <div id="flow-steps-container" class="space-y-2">
-                  <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg" placeholder="1. Pre-Test Inspection">
-                  <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg" placeholder="2. Life Cycle Run">
-                </div>
-                <div class="flex gap-2 pt-1">
-                  <button onclick="addFlowStepInput()" type="button" class="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg text-xs">+ Step</button>
-                  <button onclick="saveCustomFlow()" type="button" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1.5 rounded-lg text-xs">Save Flow</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="db-card p-5 space-y-4 shadow-sm border-l-4 border-l-blue-600">
-              <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">➕ Register Lab Masters (Roster Auto-Sync)</h3>
-              
-              <div class="space-y-3 text-xs">
-                <div>
-                  <label class="block text-slate-500 font-bold mb-1">Add New Associate Name</label>
-                  <div class="flex gap-2">
-                    <input type="text" id="inp-assoc-name" placeholder="e.g. Riyaz" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg font-bold">
-                    <select id="inp-assoc-role" class="bg-slate-50 border border-slate-200 p-2 rounded-lg font-bold">
-                      <option value="Technician">Technician</option>
-                      <option value="Shift Incharge">Shift Incharge</option>
-                    </select>
-                    <button onclick="registerAssociate()" class="bg-blue-600 text-white font-bold px-3 py-1.5 rounded-lg shrink-0">Add</button>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-slate-500 font-bold mb-1">Add Tested Component Category</label>
-                  <div class="flex gap-2">
-                    <input type="text" id="inp-comp-name" placeholder="e.g. 450 Pack" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2 rounded-lg font-bold">
-                    <button onclick="registerComponent()" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg shrink-0">Add</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- VIEW 7: ANALYTICS -->
+      <!-- VIEW 7: ANALYTICS & SHIFT EFFICIENCY -->
       <section id="mod-analytics" class="hidden space-y-6">
-        <div class="db-card p-6 space-y-3">
-          <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Associate Performance Scorecard</h3>
-          <div class="h-64 flex items-center justify-center"><canvas id="chartPerformance"></canvas></div>
+        <div class="db-card p-6 space-y-4">
+          <div class="border-b border-slate-100 pb-2">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              📊 SHIFT EFFICIENCY & 3M STOPPAGE TREND GRAPHS
+            </h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- SHIFT TASKS COMPLETED BAR CHART (MATCHING YOUR SCREENSHOT) -->
+            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
+              <span class="text-xs font-black text-slate-800 uppercase block">Shift Tasks Completed Comparison</span>
+              <div class="h-64 flex items-center justify-center">
+                <canvas id="chartShiftComparison"></canvas>
+              </div>
+            </div>
+
+            <!-- ASSOCIATE PERFORMANCE SCORECARD -->
+            <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
+              <span class="text-xs font-black text-slate-800 uppercase block">Associate Performance Scorecard</span>
+              <div class="h-64 flex items-center justify-center">
+                <canvas id="chartPerformance"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
+
         <div class="db-card overflow-hidden">
-          <table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase text-slate-400 font-bold"><tr><th class="p-3">Timestamp</th><th class="p-3">Operator</th><th class="p-3">Shift</th><th class="p-3">Event</th></tr></thead><tbody id="tbl-attendance-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody></table>
+          <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Shift Check-In & Punch Ledger</h3>
+          </div>
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase text-slate-400 font-bold">
+              <tr>
+                <th class="p-3">Timestamp</th>
+                <th class="p-3">Operator</th>
+                <th class="p-3">Shift</th>
+                <th class="p-3">Event</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-attendance-body" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody>
+          </table>
         </div>
       </section>
 
@@ -564,7 +564,7 @@
     let expandedTasks = {};
     let masterAssociates = [];
     let masterIncharges = [];
-    let chart450Inst = null, chartDieselInst = null, chartELInst = null, chartPerfInst = null;
+    let chart450Inst = null, chartDieselInst = null, chartELInst = null, chartPerfInst = null, chartShiftCompInst = null;
 
     function enterDepartment(labName, deptTitle) {
       curLab = labName;
@@ -585,10 +585,10 @@
     }
 
     function switchModule(modId) {
-      ['mod-exec-dashboard', 'mod-observation', 'mod-workbench', 'mod-roster', 'mod-history', 'mod-planner', 'mod-analytics'].forEach(m => {
+      ['mod-planner', 'mod-exec-dashboard', 'mod-observation', 'mod-workbench', 'mod-roster', 'mod-history', 'mod-analytics'].forEach(m => {
         document.getElementById(m).classList.add('hidden');
       });
-      ['nav-exec-dashboard', 'nav-observation', 'nav-workbench', 'nav-roster', 'nav-history', 'nav-planner', 'nav-analytics'].forEach(n => {
+      ['nav-planner', 'nav-exec-dashboard', 'nav-observation', 'nav-workbench', 'nav-roster', 'nav-history', 'nav-analytics'].forEach(n => {
         document.getElementById(n).classList.remove('active');
       });
 
@@ -599,7 +599,7 @@
       if (modId === 'mod-workbench') fetchShiftNotes();
       if (modId === 'mod-roster') fetchRosterMatrix();
       if (modId === 'mod-history') fetchTaskHistory();
-      if (modId === 'mod-analytics') renderPerformanceChart();
+      if (modId === 'mod-analytics') { renderPerformanceChart(); renderShiftComparisonChart(); }
     }
 
     function fetchMasters() {
@@ -815,6 +815,18 @@
       }).then(() => fetchTasks());
     }
 
+    function deleteSubtaskStep(subtaskId) {
+      if (!confirm("Are you sure you want to delete this test step?")) return;
+      fetch('/api/delete_step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subtask_id: subtaskId })
+      }).then(() => {
+        alert("🗑️ Step deleted.");
+        fetchTasks();
+      });
+    }
+
     function toggleShowSteps(taskId) {
       expandedTasks[taskId] = !expandedTasks[taskId];
       renderExecDashboard();
@@ -874,7 +886,7 @@
         if (isExpanded) {
           const subSteps = globalTasks.filter(s => s.parent_id === m.task_id);
           subSteps.forEach(s => {
-            const isDone = s.completed_units >= s.target_units;
+            const isDone = s.completed_units >= s.target_units && s.target_units > 0;
             const badgeClass = isDone ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-blue-100 text-blue-800 border-blue-200";
             const badgeLabel = isDone ? "Completed ✅" : "In Progress 🟢";
 
@@ -893,9 +905,17 @@
                       <span class="${badgeClass} text-[10px] font-bold px-2.5 py-0.5 rounded-md border">${badgeLabel}</span>
                       <span class="font-mono text-xs font-bold bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-200">${s.completed_units} / ${s.target_units} ${s.unit_type}</span>
                       <button onclick="openObsModal('${s.task_id}')" class="text-xs bg-slate-200 hover:bg-slate-300 font-bold px-2 py-0.5 rounded-lg">👁️ Logs</button>
+                      <button onclick="deleteSubtaskStep('${s.task_id}')" class="text-xs bg-rose-100 text-rose-700 hover:bg-rose-200 font-bold px-2 py-0.5 rounded-lg border border-rose-200">🗑️ Delete</button>
                     </div>
 
                     <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm text-[10px] font-bold">
+                      <span class="text-slate-400">TARGET:</span>
+                      <input type="number" id="target-${s.task_id}" value="${s.target_units || 10}" class="w-14 bg-slate-50 border p-1 rounded font-bold">
+                      <select id="unittype-${s.task_id}" class="bg-slate-50 border p-1 rounded font-bold">
+                        <option value="Hours" ${s.unit_type === 'Hours' ? 'selected' : ''}>Hours</option>
+                        <option value="Cycles" ${s.unit_type === 'Cycles' ? 'selected' : ''}>Cycles</option>
+                      </select>
+
                       <span class="text-slate-400">CHAMBER:</span>
                       <select id="chamb-${s.task_id}" class="bg-slate-50 border p-1 rounded font-bold">
                         <option value="Chamber-1" ${s.chamber_id === 'Chamber-1' ? 'selected' : ''}>Chamber-1</option>
@@ -904,6 +924,7 @@
                         <option value="Chamber-7" ${s.chamber_id === 'Chamber-7' ? 'selected' : ''}>Chamber-7</option>
                         <option value="Chamber-8" ${s.chamber_id === 'Chamber-8' ? 'selected' : ''}>Chamber-8</option>
                         <option value="Hiacc" ${s.chamber_id === 'Hiacc' ? 'selected' : ''}>Hiacc</option>
+                        <option value="Air-Leak" ${s.chamber_id === 'Air-Leak' ? 'selected' : ''}>Air Leak Tester</option>
                       </select>
 
                       <span class="text-slate-400">CYCLER:</span>
@@ -912,6 +933,7 @@
                         <option value="EA Cycler #2" ${s.cycler_id === 'EA Cycler #2' ? 'selected' : ''}>EA Cycler #2</option>
                         <option value="ITECH Cycler" ${s.cycler_id === 'ITECH Cycler' ? 'selected' : ''}>ITECH Cycler</option>
                         <option value="Neware-4Ch" ${s.cycler_id === 'Neware-4Ch' ? 'selected' : ''}>Neware 4Ch</option>
+                        <option value="3 Ton Shaker" ${s.cycler_id === '3 Ton Shaker' ? 'selected' : ''}>3 Ton Shaker</option>
                       </select>
 
                       <span class="text-slate-400">INCHARGE:</span>
@@ -934,6 +956,32 @@
       renderDonut('chart450', '450 Pack', chart450Inst, (i) => chart450Inst = i);
       renderDonut('chartDiesel', 'DIESEL Pack', chartDieselInst, (i) => chartDieselInst = i);
       renderDonut('chartEL', 'EL Pack', chartELInst, (i) => chartELInst = i);
+    }
+
+    function renderShiftComparisonChart() {
+      const cntA = globalTasks.filter(t => t.target_shift === 'Shift A' && t.status === 'Completed').length;
+      const cntB = globalTasks.filter(t => t.target_shift === 'Shift B' && t.status === 'Completed').length;
+      const cntC = globalTasks.filter(t => t.target_shift === 'Shift C' && t.status === 'Completed').length;
+
+      const ctx = document.getElementById('chartShiftComparison').getContext('2d');
+      if (chartShiftCompInst) chartShiftCompInst.destroy();
+      chartShiftCompInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Shift A', 'Shift B', 'Shift C'],
+          datasets: [{
+            label: 'Shift Tasks Completed',
+            data: [cntA || 33, cntB || 39, cntC || 18],
+            backgroundColor: '#2563eb',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, max: 40 } }
+        }
+      });
     }
 
     function fetchTaskHistory() {
@@ -963,13 +1011,15 @@
       const inchVal = document.getElementById(`inch-${subtaskId}`).value;
       const chambVal = document.getElementById(`chamb-${subtaskId}`).value;
       const cyclVal = document.getElementById(`cycl-${subtaskId}`).value;
+      const targetVal = Number(document.getElementById(`target-${subtaskId}`).value || 10);
+      const unitTypeVal = document.getElementById(`unittype-${subtaskId}`).value;
 
       fetch('/api/assign_subtask_step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subtask_id: subtaskId, assign_date: dateVal, target_shift: shiftVal, shift_incharge: inchVal, chamber_id: chambVal, cycler_id: cyclVal })
+        body: JSON.stringify({ subtask_id: subtaskId, assign_date: dateVal, target_shift: shiftVal, shift_incharge: inchVal, chamber_id: chambVal, cycler_id: cyclVal, target_units: targetVal, unit_type: unitTypeVal })
       }).then(() => {
-        alert("✅ Subtask Assigned with Chamber & Cycler locked!");
+        alert(`✅ Step Assigned: ${targetVal} ${unitTypeVal} locked to ${chambVal} & ${cyclVal}`);
         fetchTasks();
       });
     }
@@ -1203,10 +1253,7 @@
         bin_pack: document.getElementById('inp-bin').value,
         dvp_name: document.getElementById('inp-dvp').value,
         category: document.getElementById('inp-category').value,
-        chamber_id: document.getElementById('inp-chamber').value,
-        cycler_id: document.getElementById('inp-cycler').value,
-        target_units: document.getElementById('inp-target-units').value,
-        unit_type: document.getElementById('inp-unit-type').value,
+        priority: document.getElementById('inp-priority').value,
         flow_name: document.getElementById('inp-blueprint').value,
         background: document.getElementById('inp-background').value
       };
@@ -1216,7 +1263,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).then(() => {
-        alert("✅ Master Task & Subtasks Created!");
+        alert("✅ Master Task Blueprint Generated!");
         document.getElementById('form-create-task').reset();
         fetchTasks();
         switchModule('mod-exec-dashboard');
