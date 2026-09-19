@@ -25,13 +25,40 @@ def init_db():
             target_shift TEXT,
             target_units INTEGER,
             completed_units INTEGER,
+            unit_type TEXT,
+            equipment_id TEXT,
             progress_percent TEXT,
             status TEXT,
+            background TEXT,
             observations TEXT
         )
     ''')
     
-    # Audit History & Reasons Log
+    # Dynamic Test Flows Table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS custom_flows (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lab_name TEXT,
+            flow_name TEXT,
+            step_order INTEGER,
+            step_name TEXT
+        )
+    ''')
+
+    # Attendance & 5S Ledger
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS attendance_ledger (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            operator TEXT,
+            shift TEXT,
+            lab_name TEXT,
+            punch_type TEXT,
+            s5_verified INTEGER
+        )
+    ''')
+
+    # Audit History Log
     c.execute('''
         CREATE TABLE IF NOT EXISTS audit_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,21 +72,30 @@ def init_db():
         )
     ''')
 
-    # Seed Sample Data
-    c.execute("SELECT COUNT(*) FROM master_tasks")
+    # Seed Initial Default Flows if empty
+    c.execute("SELECT COUNT(*) FROM custom_flows")
     if c.fetchone()[0] == 0:
-        c.execute("""
-            INSERT INTO master_tasks VALUES 
-            ('TSK-599727', '', 'BatteryLab_Tasks', '450-9702', 'TL-9 Life Cycle', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Unassigned', 'Shift A', 1000, 314, '31%', 'Running', '[Objective]: Thermal stress validation run'),
-            ('SUB-839376', 'TSK-599727', 'BatteryLab_Tasks', '450-9702', '3. Life Cycle Run', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Sathya', 'Shift A', 1000, 398, '40%', 'Running', 'Chamber operating at 45C'),
-            ('SUB-766448', 'TSK-599727', 'BatteryLab_Tasks', '450-9702', '4. Post Capacity Test', '450', 'EL-46497', 'P1', '27.2.1', 'Yeshwanth', 'Praveen kumar', 'Sanjay', 'Shift A', 1, 0, '0%', 'To Do', ''),
-            ('TSK-918058', '', 'BatteryLab_Tasks', 'BFGMBC14000136', 'TL-2 Thermal Run', '450', 'EL-88391', 'P2', '27.2.1', 'Yeshwanth', 'Raja', 'Unassigned', 'Shift B', 1500, 1200, '80%', 'Running', '[Objective]: High temperature validation'),
-            ('SUB-954598', 'TSK-918058', 'BatteryLab_Tasks', 'BFGMBC14000136', '3. Thermal Cycling', '450', 'EL-88391', 'P2', '27.2.1', 'Yeshwanth', 'Raja', 'Yosvaraj', 'Shift B', 1500, 1200, '80%', 'Awaiting Resource', 'Chamber sensor tripped during cycle 120')
-        """)
-        conn.commit()
+        default_flows = [
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 1, 'Pre-Test Inspection & Capacity'),
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 2, 'Thermal Life Cycle Run'),
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 3, 'Post-Capacity Check'),
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 4, 'Air Leak & Insulation Test'),
+            ('CellLab_Tasks', 'Cell Formation Standard', 1, 'Electrolyte Wetting'),
+            ('CellLab_Tasks', 'Cell Formation Standard', 2, 'Initial C-Rate Formation'),
+            ('CellLab_Tasks', 'Cell Formation Standard', 3, 'Degassing & Sealing'),
+            ('Vibration_Tasks', 'Standard Vibration Flow', 1, 'DUT Mounting & Sensors'),
+            ('Vibration_Tasks', 'Standard Vibration Flow', 2, 'X-Axis Sine Sweep'),
+            ('Vibration_Tasks', 'Standard Vibration Flow', 3, 'Y-Axis Random Run'),
+            ('Vibration_Tasks', 'Standard Vibration Flow', 4, 'Z-Axis Shock Test'),
+            ('EELab_Tasks', 'BMS Stress Validation', 1, 'CAN Baud Rate Check'),
+            ('EELab_Tasks', 'BMS Stress Validation', 2, 'High Current Discharge Run'),
+            ('EELab_Tasks', 'BMS Stress Validation', 3, 'Thermal Cutoff Verification')
+        ]
+        c.executemany("INSERT INTO custom_flows (lab_name, flow_name, step_order, step_name) VALUES (?, ?, ?, ?)", default_flows)
 
+    conn.commit()
     conn.close()
 
 if __name__ == "__main__":
     init_db()
-    print("✅ Database initialized successfully!")
+    print("✅ Database initialized successfully with Equipment Mapping & Dynamic Flows!")
