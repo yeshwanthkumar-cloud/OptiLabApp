@@ -1,0 +1,43 @@
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect('optilab.db')
+    c = conn.cursor()
+    
+    # Table for Master DVP Tasks
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS master_tasks (
+            task_id TEXT PRIMARY KEY,
+            bin_pack TEXT NOT NULL,
+            dvp_name TEXT NOT NULL,
+            category TEXT,
+            priority TEXT,
+            sprint_id TEXT,
+            lead_engineer TEXT,
+            target_shift TEXT,
+            status TEXT,
+            objective TEXT
+        )
+    ''')
+    
+    # Table for Child Subtask Steps
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS subtasks (
+            subtask_id TEXT PRIMARY KEY,
+            parent_id TEXT,
+            step_name TEXT NOT NULL,
+            assigned_associate TEXT,
+            target_shift TEXT,
+            target_units INTEGER,
+            completed_units INTEGER,
+            status TEXT,
+            FOREIGN KEY (parent_id) REFERENCES master_tasks (task_id) ON DELETE CASCADE
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+if __name__ == "__main__":
+    init_db()
+    print(" Database initialized successfully!")
