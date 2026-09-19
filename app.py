@@ -12,7 +12,7 @@ def index():
     return render_template('index.html')
 
 # -----------------------------------------------------------------------------
-# GET TASKS & SEED BATTERY LAB DATA
+# GET TASKS & SCHEMATIC DATA
 # -----------------------------------------------------------------------------
 @app.route('/api/tasks/<lab_name>')
 def get_tasks(lab_name):
@@ -20,21 +20,6 @@ def get_tasks(lab_name):
     c = conn.cursor()
     c.execute("SELECT * FROM master_tasks WHERE lab_name = ? ORDER BY CASE priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 ELSE 3 END, task_id", (lab_name,))
     rows = c.fetchall()
-    
-    if len(rows) == 0 and lab_name == 'BatteryLab_Tasks':
-        sample_data = [
-            ('TSK-385040', '', 'BatteryLab_Tasks', 'STB-0218', 'TL-2', '450 Pack', '-', 'P1', '27.2.1', 'Raj Kumar', 'Unassigned', 'Unassigned', 'Shift A', '2026-08-05', 100, 100, 'Cycles', 'Chamber-3', 'ITECH Cycler', '100%', 'Completed', 'STB 14P LVPT', 'LVPT Validation passed.', '2026-08-04'),
-            ('SUB-806937', 'TSK-385040', 'BatteryLab_Tasks', 'STB-0218', '1. Pre-Test Check', '450 Pack', '-', 'P1', '27.2.1', 'Raj Kumar', 'Raja', 'Sathya', 'Shift A', '2026-08-05', 1, 1, 'Hours', 'Chamber-3', 'ITECH Cycler', '100%', 'Completed', '', 'Insulation resistance > 500MΩ.', '2026-08-04'),
-            ('SUB-655622', 'TSK-385040', 'BatteryLab_Tasks', 'STB-0218', '2. Pre-Capacity', '450 Pack', '-', 'P1', '27.2.1', 'Raj Kumar', 'Praveen kumar', 'Sanjay', 'Shift A', '2026-08-05', 9, 9, 'Hours', 'Chamber-3', 'ITECH Cycler', '100%', 'Completed', '', 'Initial capacity 52.4Ah logged.', '2026-08-04'),
-            ('SUB-918705', 'TSK-385040', 'BatteryLab_Tasks', 'STB-0218', '3. Thermal Cycling', '450 Pack', '-', 'P1', '27.2.1', 'Raj Kumar', 'Riyaz', 'Yosvaraj', 'Shift B', '2026-08-05', 250, 250, 'Cycles', 'Chamber-3', 'ITECH Cycler', '100%', 'Completed', '', '250 cycles completed cleanly.', '2026-08-04'),
-            ('TSK-599727', '', 'BatteryLab_Tasks', '450-9702', 'TL-9', '450 Pack', '-', 'P1', '27.2.1', 'Raj Kumar', 'Unassigned', 'Unassigned', 'Shift A', '2026-08-05', 1000, 380, 'Cycles', 'Chamber-1', 'EA Cycler #1', '38%', 'Running', '11P life cycle pack', 'Thermal life run in progress.', '2026-11-01'),
-            ('SUB-301921', 'TSK-599727', 'BatteryLab_Tasks', '450-9702', '1. Life Cycle Run Step', '450 Pack', '-', 'P1', '27.2.1', 'Raj Kumar', 'Praveen kumar', 'Sanjay', 'Shift A', '2026-08-05', 1000, 380, 'Cycles', 'Chamber-1', 'EA Cycler #1', '38%', 'Running', '', 'Shift A log: 380 cycles.', '2026-11-01')
-        ]
-        c.executemany("INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", sample_data)
-        conn.commit()
-        c.execute("SELECT * FROM master_tasks WHERE lab_name = ? ORDER BY CASE priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 ELSE 3 END, task_id", (lab_name,))
-        rows = c.fetchall()
-
     conn.close()
     
     tasks = []
@@ -62,10 +47,6 @@ def create_task():
     sprint_id = data.get('sprint_id', '27.2.1')
     target_shift = data.get('target_shift', 'Shift A')
     assign_date = data.get('assign_date', datetime.now().strftime('%Y-%m-%d'))
-    target_units = int(data.get('target_units', 100))
-    unit_type = data.get('unit_type', 'Cycles')
-    chamber_id = data.get('chamber_id', 'Chamber-1')
-    cycler_id = data.get('cycler_id', 'EA Cycler #1')
     background = data.get('background', '')
     target_end_date = data.get('target_end_date', '2026-11-01')
     selected_flow = data.get('flow_name', 'CUSTOM')
@@ -78,7 +59,7 @@ def create_task():
         INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         master_id, "", lab_name, bin_pack, dvp_name, category, trf_id, priority, sprint_id,
-        "Raj Kumar", "Unassigned", "Unassigned", target_shift, assign_date, target_units, 0, unit_type, chamber_id, cycler_id, "0%",
+        "Raj Kumar", "Unassigned", "Unassigned", target_shift, assign_date, 0, 0, "Steps", "Unassigned", "Unassigned", "0%",
         "Running", background, f"[Objective]: {dvp_name}", target_end_date
     ))
 
@@ -91,7 +72,7 @@ def create_task():
                 INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 sub_id, master_id, lab_name, bin_pack, f"{step_order}. {step_name}", category, trf_id, priority, sprint_id,
-                "Raj Kumar", "Praveen kumar", "Unassigned", target_shift, assign_date, target_units, 0, unit_type, chamber_id, cycler_id, "0%",
+                "Raj Kumar", "Unassigned", "Unassigned", target_shift, assign_date, 10, 0, "Hours", "Chamber-1", "EA Cycler #1", "0%",
                 "To Do", background, "", target_end_date
             ))
 
@@ -99,9 +80,40 @@ def create_task():
     conn.close()
     return jsonify({"success": True, "master_id": master_id})
 
-# -----------------------------------------------------------------------------
-# MONTHLY GRID ROSTER MATRIX ENDPOINTS (DAYS 1 to 31)
-# -----------------------------------------------------------------------------
+@app.route('/api/delete_step', methods=['POST'])
+def delete_step():
+    data = request.json
+    subtask_id = data.get('subtask_id')
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM master_tasks WHERE task_id = ?", (subtask_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/assign_subtask_step', methods=['POST'])
+def assign_subtask_step():
+    data = request.json
+    subtask_id = data.get('subtask_id')
+    assign_date = data.get('assign_date')
+    target_shift = data.get('target_shift')
+    shift_incharge = data.get('shift_incharge')
+    chamber_id = data.get('chamber_id')
+    cycler_id = data.get('cycler_id')
+    target_units = int(data.get('target_units', 10))
+    unit_type = data.get('unit_type', 'Hours')
+
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+        UPDATE master_tasks 
+        SET assign_date = ?, target_shift = ?, shift_incharge = ?, chamber_id = ?, cycler_id = ?, target_units = ?, unit_type = ?, status = 'Running' 
+        WHERE task_id = ?
+    """, (assign_date, target_shift, shift_incharge, chamber_id, cycler_id, target_units, unit_type, subtask_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
 @app.route('/api/get_roster_matrix/<lab_name>')
 def get_roster_matrix(lab_name):
     conn = get_connection()
@@ -140,9 +152,6 @@ def update_roster_day():
     conn.close()
     return jsonify({"success": True})
 
-# -----------------------------------------------------------------------------
-# MASTER ASSOCIATES & COMPONENTS ENDPOINTS
-# -----------------------------------------------------------------------------
 @app.route('/api/get_masters/<lab_name>')
 def get_masters(lab_name):
     conn = get_connection()
@@ -183,9 +192,6 @@ def add_component():
     conn.close()
     return jsonify({"success": True})
 
-# -----------------------------------------------------------------------------
-# START TEST, UPDATE PROGRESS & HISTORY
-# -----------------------------------------------------------------------------
 @app.route('/api/start_test', methods=['POST'])
 def start_test():
     data = request.json
@@ -223,7 +229,7 @@ def update_progress():
         target = r[1]
         existing_obs = r[2] or ""
         
-        final_status = "Completed" if new_units >= target else status
+        final_status = "Completed" if (target > 0 and new_units >= target) else status
         pct = f"{int((new_units/target)*100)}%" if target > 0 else "100%"
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -235,20 +241,6 @@ def update_progress():
         c.execute("INSERT INTO audit_log (timestamp, lab_name, shift, task_id, operator, action, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
                   (timestamp, lab, shift, task_id, operator, f"Logged +{added_units} units. Status: {final_status}", observation_text))
 
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/assign_subtask_step', methods=['POST'])
-def assign_subtask_step():
-    data = request.json
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""
-        UPDATE master_tasks 
-        SET assign_date = ?, target_shift = ?, shift_incharge = ?, chamber_id = ?, cycler_id = ?, status = 'Running' 
-        WHERE task_id = ?
-    """, (data.get('assign_date'), data.get('target_shift'), data.get('shift_incharge'), data.get('chamber_id'), data.get('cycler_id'), data.get('subtask_id')))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
