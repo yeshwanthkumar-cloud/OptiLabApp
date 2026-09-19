@@ -10,12 +10,13 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .glass-card:hover { border-color: rgba(59, 130, 246, 0.4); }
+    .nav-btn.active { background-color: #2563eb; color: #ffffff; }
   </style>
 </head>
 <body class="h-full flex flex-col antialiased bg-slate-950 text-slate-100">
 
-  <!-- TOP APP HEADER -->
-  <header class="w-full bg-slate-900/90 border-b border-slate-800 px-6 py-4 flex items-center justify-between shrink-0 shadow-lg">
+  <!-- TOP HEADER & LAB ENVIRONMENT GATEWAY -->
+  <header class="w-full bg-slate-900/90 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0 shadow-lg">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-blue-500/30">⚡</div>
       <div>
@@ -24,7 +25,7 @@
       </div>
     </div>
 
-    <!-- Active Lab Switcher Buttons -->
+    <!-- Active Lab Gateway Switcher -->
     <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
       <button onclick="switchLab('BatteryLab_Tasks')" id="btn-lab-battery" class="px-4 py-2 rounded-xl text-xs font-black transition bg-blue-600 text-white shadow-md">🔋 Battery Lab</button>
       <button onclick="switchLab('CellLab_Tasks')" id="btn-lab-cell" class="px-4 py-2 rounded-xl text-xs font-black transition text-slate-400 hover:text-white">🧪 Cell Lab</button>
@@ -33,11 +34,20 @@
     </div>
   </header>
 
-  <!-- MAIN WORKSPACE -->
+  <!-- NAVIGATION BAR (THE 5 MODULES) -->
+  <nav class="bg-slate-900 border-b border-slate-800 px-6 py-2 flex gap-2 overflow-x-auto shrink-0">
+    <button onclick="switchModule('mod-workbench')" id="nav-workbench" class="nav-btn active px-4 py-2 rounded-xl text-xs font-black transition text-slate-300 hover:text-white">☀️ Shift Workbench</button>
+    <button onclick="switchModule('mod-planner')" id="nav-planner" class="nav-btn px-4 py-2 rounded-xl text-xs font-black transition text-slate-300 hover:text-white">📋 Task Planner (Create Tasks)</button>
+    <button onclick="switchModule('mod-dashboard1')" id="nav-dashboard1" class="nav-btn px-4 py-2 rounded-xl text-xs font-black transition text-slate-300 hover:text-white">📊 Dashboard 1 (Engineering Matrix)</button>
+    <button onclick="switchModule('mod-analytics')" id="nav-analytics" class="nav-btn px-4 py-2 rounded-xl text-xs font-black transition text-slate-300 hover:text-white">📈 Dashboard 2 (Roster & Analytics)</button>
+    <button onclick="switchModule('mod-trf')" id="nav-trf" class="nav-btn px-4 py-2 rounded-xl text-xs font-black transition text-slate-300 hover:text-white">📑 TRF Gateway</button>
+  </nav>
+
+  <!-- MAIN WORKSPACE CONTAINER -->
   <div class="flex flex-1 overflow-hidden">
     
-    <!-- SIDEBAR NAVIGATION -->
-    <aside class="w-64 bg-slate-900/50 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0">
+    <!-- SIDEBAR OPERATOR FILTERS (VISIBLE FOR WORKBENCH & ANALYTICS) -->
+    <aside id="app-sidebar" class="w-64 bg-slate-900/50 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0">
       <div class="space-y-6">
         <div>
           <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-2">Operator Desk Filter</span>
@@ -51,7 +61,7 @@
         </div>
 
         <div>
-          <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-2">Shift Filter</span>
+          <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-2">Active Shift Filter</span>
           <select id="sel-shift-filter" onchange="renderKanban()" class="w-full bg-slate-900 border border-slate-700 text-blue-400 font-bold text-xs p-2.5 rounded-xl focus:outline-none focus:border-blue-500">
             <option value="Shift A">Shift A (06:00 AM - 02:00 PM)</option>
             <option value="Shift B">Shift B (02:00 PM - 10:00 PM)</option>
@@ -66,64 +76,218 @@
       </div>
     </aside>
 
-    <!-- KANBAN BOARD -->
-    <main class="flex-1 p-6 overflow-y-auto bg-slate-950 space-y-6">
-      
-      <!-- Top Metrics Bar -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-blue-500">
-          <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Active Shift Tasks</span>
-          <span id="kpi-total" class="text-2xl font-black text-white block mt-1">0</span>
-        </div>
-        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-emerald-500">
-          <span class="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Running 🟢</span>
-          <span id="kpi-running" class="text-2xl font-black text-white block mt-1">0</span>
-        </div>
-        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-rose-500">
-          <span class="text-[10px] font-black uppercase text-rose-400 tracking-wider">Blocked / Stoppages 🛑</span>
-          <span id="kpi-blocked" class="text-2xl font-black text-white block mt-1">0</span>
-        </div>
-        <div class="glass-card p-4 rounded-2xl border-l-4 border-l-amber-500">
-          <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider">Assigned Operators</span>
-          <span id="kpi-assigned" class="text-2xl font-black text-white block mt-1">0</span>
-        </div>
-      </div>
+    <main class="flex-1 p-6 overflow-y-auto bg-slate-950">
 
-      <!-- 3 Kanban Columns -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- ========================================================================= -->
+      <!-- MODULE 1: SHIFT WORKBENCH (KANBAN & ATTENDANCE PUNCH DESK) -->
+      <!-- ========================================================================= -->
+      <section id="mod-workbench" class="space-y-6">
         
-        <!-- TO DO -->
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
-          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <span class="font-extrabold text-xs uppercase text-slate-300 tracking-wider">📋 TO DO (PENDING ASSIGNMENT)</span>
-            <span id="count-todo" class="bg-slate-800 text-slate-300 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">0</span>
+        <!-- ASSOCIATE ATTENDANCE CHECK-IN DESK -->
+        <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center font-black text-blue-400 text-lg">👤</div>
+            <div>
+              <h3 class="text-xs font-black uppercase text-white tracking-wider">Floor Associate Attendance Punch Desk</h3>
+              <p class="text-[11px] font-bold text-slate-400">Punch shift start/end to unlock active workstation assignments</p>
+            </div>
           </div>
-          <div id="col-todo" class="space-y-3 min-h-[400px]"></div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <select id="sel-punch-operator" class="bg-slate-900 border border-slate-700 text-white font-bold text-xs p-2.5 rounded-xl">
+              <option value="Sathya">Sathya</option>
+              <option value="Sanjay">Sanjay</option>
+              <option value="Yosvaraj">Yosvaraj</option>
+              <option value="Bharani">Bharani</option>
+              <option value="Praveen kumar">Praveen kumar (Incharge)</option>
+              <option value="Raja">Raja (Incharge)</option>
+            </select>
+            <button onclick="logAttendance('CHECK_IN')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30">⏰ CHECK IN</button>
+            <button onclick="logAttendance('CHECK_OUT')" class="bg-rose-600 hover:bg-rose-500 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-rose-600/30">🚪 CHECK OUT</button>
+          </div>
         </div>
 
-        <!-- RUNNING -->
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
-          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <span class="font-extrabold text-xs uppercase text-emerald-400 tracking-wider">🟢 IN PROGRESS / RUNNING</span>
-            <span id="count-running" class="bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">0</span>
+        <!-- Top Metrics Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="glass-card p-4 rounded-2xl border-l-4 border-l-blue-500">
+            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Active Shift Tasks</span>
+            <span id="kpi-total" class="text-2xl font-black text-white block mt-1">0</span>
           </div>
-          <div id="col-running" class="space-y-3 min-h-[400px]"></div>
+          <div class="glass-card p-4 rounded-2xl border-l-4 border-l-emerald-500">
+            <span class="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Running 🟢</span>
+            <span id="kpi-running" class="text-2xl font-black text-white block mt-1">0</span>
+          </div>
+          <div class="glass-card p-4 rounded-2xl border-l-4 border-l-rose-500">
+            <span class="text-[10px] font-black uppercase text-rose-400 tracking-wider">Blocked / Stoppages 🛑</span>
+            <span id="kpi-blocked" class="text-2xl font-black text-white block mt-1">0</span>
+          </div>
+          <div class="glass-card p-4 rounded-2xl border-l-4 border-l-amber-500">
+            <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider">Assigned Operators</span>
+            <span id="kpi-assigned" class="text-2xl font-black text-white block mt-1">0</span>
+          </div>
         </div>
 
-        <!-- BLOCKED -->
-        <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
-          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <span class="font-extrabold text-xs uppercase text-rose-400 tracking-wider">🛑 BLOCKED / 3M STOPPAGE</span>
-            <span id="count-blocked" class="bg-rose-950/80 text-rose-400 border border-rose-800 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">0</span>
+        <!-- 3 Kanban Columns -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+              <span class="font-extrabold text-xs uppercase text-slate-300 tracking-wider">📋 TO DO (PENDING ASSIGNMENT)</span>
+              <span id="count-todo" class="bg-slate-800 text-slate-300 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="col-todo" class="space-y-3 min-h-[400px]"></div>
           </div>
-          <div id="col-blocked" class="space-y-3 min-h-[400px]"></div>
-        </div>
 
-      </div>
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+              <span class="font-extrabold text-xs uppercase text-emerald-400 tracking-wider">🟢 IN PROGRESS / RUNNING</span>
+              <span id="count-running" class="bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="col-running" class="space-y-3 min-h-[400px]"></div>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+              <span class="font-extrabold text-xs uppercase text-rose-400 tracking-wider">🛑 BLOCKED / 3M STOPPAGE</span>
+              <span id="count-blocked" class="bg-rose-950/80 text-rose-400 border border-rose-800 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="col-blocked" class="space-y-3 min-h-[400px]"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 2: TASK PLANNER & BLUEPRINT GENERATOR -->
+      <!-- ========================================================================= -->
+      <section id="mod-planner" class="hidden space-y-6">
+        <div class="glass-card p-6 rounded-3xl border border-slate-800 max-w-3xl mx-auto space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h2 class="text-sm font-black text-white uppercase tracking-wider">📋 Generate New DVP Master Task Blueprint</h2>
+            <p class="text-xs text-slate-400 font-medium mt-1">Engineers log master runs here to auto-populate subtask checklists for shift incharges.</p>
+          </div>
+
+          <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-4 text-xs font-bold">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-slate-400 uppercase text-[10px] mb-1">BIN / Pack Barcode *</label>
+                <input type="text" id="inp-bin" required placeholder="e.g. BGFT5B17000619" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-slate-400 uppercase text-[10px] mb-1">DVP Profile Name *</label>
+                <input type="text" id="inp-dvp" required placeholder="e.g. STB Pack Life Cycle" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-slate-400 uppercase text-[10px] mb-1">Priority Level *</label>
+                <select id="inp-priority" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl">
+                  <option value="P1">P1 - Critical</option>
+                  <option value="P2" selected>P2 - High</option>
+                  <option value="P3">P3 - Medium</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-400 uppercase text-[10px] mb-1">TRF ID Reference</label>
+                <input type="text" id="inp-trf" placeholder="e.g. EL-46497" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl">
+              </div>
+              <div>
+                <label class="block text-slate-400 uppercase text-[10px] mb-1">Target Shift *</label>
+                <select id="inp-shift" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl">
+                  <option value="Shift A">Shift A</option>
+                  <option value="Shift B">Shift B</option>
+                  <option value="Shift C">Shift C</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 uppercase text-[10px] mb-1">Select Profile Blueprint Template</label>
+              <select id="inp-blueprint" class="w-full bg-slate-950 border border-slate-700 text-blue-400 font-extrabold p-2.5 rounded-xl">
+                <option value="CUSTOM">Custom Single Step</option>
+                <option value="TL-1 Profile">TL-1 Profile (5 Steps)</option>
+                <option value="TL-2 Thermal">TL-2 Thermal Cycling (4 Steps)</option>
+                <option value="TL-9 Life Cycle">TL-9 Life Cycle (4 Steps)</option>
+                <option value="Cell Formation">Cell Formation Protocol (3 Steps)</option>
+                <option value="Vibration Flow">Vibration Standard Flow (5 Steps)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 uppercase text-[10px] mb-1">Test Objective & Notes *</label>
+              <textarea id="inp-objective" required rows="2" placeholder="e.g. Evaluate battery pack performance under high temperature cycling" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl font-medium"></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl uppercase tracking-wider text-xs shadow-lg shadow-blue-600/30">
+              💾 GENERATE MASTER BLUEPRINT TASK
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 3: DASHBOARD 1 (ENGINEERING MATRIX) -->
+      <!-- ========================================================================= -->
+      <section id="mod-dashboard1" class="hidden space-y-6">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-sm font-black text-white uppercase tracking-wider">📊 Master DVP Task Execution Matrix</h2>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
+          <table class="w-full text-left text-xs font-semibold">
+            <thead class="bg-slate-900 border-b border-slate-800 text-[10px] uppercase text-slate-400 font-extrabold">
+              <tr>
+                <th class="p-3">Task ID</th>
+                <th class="p-3">Priority</th>
+                <th class="p-3">Pack Barcode</th>
+                <th class="p-3">TRF ID</th>
+                <th class="p-3">DVP Profile</th>
+                <th class="p-3">Lead Eng</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Observations / Notes</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-master-body" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 4: DASHBOARD 2 (ROSTER & ATTENDANCE ANALYTICS) -->
+      <!-- ========================================================================= -->
+      <section id="mod-analytics" class="hidden space-y-6">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-sm font-black text-white uppercase tracking-wider">📈 Attendance Punch Ledger & Shift Roster</h2>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
+          <table class="w-full text-left text-xs font-semibold">
+            <thead class="bg-slate-900 border-b border-slate-800 text-[10px] uppercase text-slate-400 font-extrabold">
+              <tr>
+                <th class="p-3">Timestamp</th>
+                <th class="p-3">Operator Name</th>
+                <th class="p-3">Shift</th>
+                <th class="p-3">Punch Event</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-attendance-body" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 5: TRF GATEWAY -->
+      <!-- ========================================================================= -->
+      <section id="mod-trf" class="hidden space-y-6">
+        <div class="border-b border-slate-800 pb-3">
+          <h2 class="text-sm font-black text-white uppercase tracking-wider">📑 Standalone TRF Certification & Data Desk</h2>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
+          <p class="text-xs text-slate-400 font-bold">All closed and certified TRF reports for active lab runs are archived here.</p>
+        </div>
+      </section>
+
     </main>
   </div>
 
-  <!-- PROGRESS UPDATE & VARIANCE JUSTIFICATION MODAL -->
+  <!-- PROGRESS UPDATE MODAL -->
   <div id="modal-progress" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -152,18 +316,16 @@
           <input type="number" id="pop-units" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl font-bold" min="0">
         </div>
 
-        <!-- REASON INPUT (SHOWN FOR LOW PROGRESS OR BLOCKED) -->
-        <div id="box-reason-container">
-          <label class="block text-amber-400 uppercase text-[10px] font-black mb-1">⚠️ Reason / Stoppage Justification *</label>
+        <div>
+          <label class="block text-amber-400 uppercase text-[10px] font-black mb-1">⚠️ Stoppage / Low Progress Reason *</label>
           <select id="pop-reason-preset" class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl font-bold mb-2">
             <option value="Target Achieved">Target Progress Achieved Normal</option>
-            <option value="Chamber Trip / Cutoff">Chamber Trip / Temperature Cutoff</option>
+            <option value="Chamber Trip / Cutoff">Chamber Trip / Cutoff</option>
             <option value="Power Failure">Power Outage / Mains Cut</option>
-            <option value="Parts / Component Missing">Parts / Components Not Available</option>
-            <option value="Fixture Loose / Setup Issue">Fixture Loose / Setup Adjustment Needed</option>
-            <option value="Other">Other (Specify below)</option>
+            <option value="Parts / Component Missing">Parts Missing</option>
+            <option value="Fixture Loose / Setup Issue">Fixture Adjustment Needed</option>
           </select>
-          <textarea id="pop-reason-text" rows="2" placeholder="Describe exact reason for low progress or stoppage..." class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl font-medium"></textarea>
+          <textarea id="pop-reason-text" rows="2" placeholder="Describe exact reason for delay..." class="w-full bg-slate-950 border border-slate-700 text-white p-2.5 rounded-xl font-medium"></textarea>
         </div>
       </div>
 
@@ -182,9 +344,7 @@
       curLab = labName;
       ['battery', 'cell', 'vibration', 'ee'].forEach(l => {
         const btn = document.getElementById('btn-lab-' + l);
-        if (btn) {
-          btn.className = "px-4 py-2 rounded-xl text-xs font-black transition text-slate-400 hover:text-white";
-        }
+        if (btn) btn.className = "px-4 py-2 rounded-xl text-xs font-black transition text-slate-400 hover:text-white";
       });
 
       const activeKey = labName.split('Lab')[0].split('_')[0].toLowerCase();
@@ -193,6 +353,26 @@
 
       document.getElementById('lbl-active-scope').innerText = labName.replace('_Tasks','').toUpperCase();
       fetchTasks();
+      fetchAttendance();
+    }
+
+    function switchModule(modId) {
+      ['mod-workbench', 'mod-planner', 'mod-dashboard1', 'mod-analytics', 'mod-trf'].forEach(m => {
+        document.getElementById(m).classList.add('hidden');
+      });
+      ['nav-workbench', 'nav-planner', 'nav-dashboard1', 'nav-analytics', 'nav-trf'].forEach(n => {
+        document.getElementById(n).classList.remove('active');
+      });
+
+      document.getElementById(modId).classList.remove('hidden');
+      document.getElementById('nav-' + modId.replace('mod-','')).classList.add('active');
+
+      const sidebar = document.getElementById('app-sidebar');
+      if (modId === 'mod-workbench' || modId === 'mod-analytics') {
+        sidebar.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('hidden');
+      }
     }
 
     function fetchTasks() {
@@ -201,7 +381,60 @@
         .then(data => {
           globalTasks = data;
           renderKanban();
+          renderMasterMatrix();
         });
+    }
+
+    function logAttendance(punchType) {
+      const op = document.getElementById('sel-punch-operator').value;
+      const shift = document.getElementById('sel-shift-filter').value;
+      fetch('/api/attendance_punch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operator: op, punch_type: punchType, shift: shift, lab_name: curLab })
+      }).then(() => {
+        alert(`✅ ${punchType} logged for ${op}`);
+        fetchAttendance();
+      });
+    }
+
+    function fetchAttendance() {
+      fetch('/api/get_attendance/' + curLab)
+        .then(res => res.json())
+        .then(logs => {
+          const tbody = document.getElementById('tbl-attendance-body');
+          tbody.innerHTML = "";
+          logs.forEach(l => {
+            tbody.innerHTML += `
+              <tr class="hover:bg-slate-900/50">
+                <td class="p-3 text-slate-400 font-mono">${l.timestamp}</td>
+                <td class="p-3 text-white font-bold">${l.operator}</td>
+                <td class="p-3 text-blue-400">${l.shift}</td>
+                <td class="p-3"><span class="${l.punch_type === 'CHECK_IN' ? 'text-emerald-400 bg-emerald-950' : 'text-rose-400 bg-rose-950'} px-2 py-0.5 rounded font-black text-[10px]">${l.punch_type}</span></td>
+              </tr>
+            `;
+          });
+        });
+    }
+
+    function renderMasterMatrix() {
+      const tbody = document.getElementById('tbl-master-body');
+      tbody.innerHTML = "";
+      const masters = globalTasks.filter(t => !t.parent_id);
+      masters.forEach(m => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-900/50">
+            <td class="p-3 font-mono text-blue-400 font-bold">${m.task_id}</td>
+            <td class="p-3 font-black text-amber-400">${m.priority}</td>
+            <td class="p-3 text-white font-bold">${m.bin_pack}</td>
+            <td class="p-3 text-slate-400">${m.trf_id || 'N/A'}</td>
+            <td class="p-3 text-white font-bold">${m.dvp_name}</td>
+            <td class="p-3 text-slate-300">${m.lead_engineer}</td>
+            <td class="p-3"><span class="bg-blue-950 text-blue-400 px-2 py-0.5 rounded font-black text-[10px]">${m.status}</span></td>
+            <td class="p-3 text-slate-400 font-medium">${m.observations || ''}</td>
+          </tr>
+        `;
+      });
     }
 
     function renderKanban() {
@@ -214,7 +447,6 @@
       const selectedAssoc = document.getElementById('sel-associate-filter').value;
       const selectedShift = document.getElementById('sel-shift-filter').value;
 
-      // Filter subtasks
       const activeSubs = globalTasks.filter(t => {
         const isSub = !!t.parent_id;
         const matchesShift = t.target_shift === selectedShift;
@@ -276,6 +508,31 @@
       document.getElementById('kpi-assigned').innerText = activeSubs.filter(t => t.assigned_associate !== 'Unassigned').length;
     }
 
+    function handleCreateTask(e) {
+      e.preventDefault();
+      const payload = {
+        lab_name: curLab,
+        bin_pack: document.getElementById('inp-bin').value,
+        dvp_name: document.getElementById('inp-dvp').value,
+        priority: document.getElementById('inp-priority').value,
+        trf_id: document.getElementById('inp-trf').value,
+        target_shift: document.getElementById('inp-shift').value,
+        blueprint: document.getElementById('inp-blueprint').value,
+        objective: document.getElementById('inp-objective').value
+      };
+
+      fetch('/api/create_task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(res => res.json()).then(data => {
+        alert("✅ Master Task [" + data.master_id + "] & Subtasks generated successfully!");
+        document.getElementById('form-create-task').reset();
+        fetchTasks();
+        switchModule('mod-workbench');
+      });
+    }
+
     function assignAssociate(taskId, assocName) {
       fetch('/api/assign_associate', {
         method: 'POST',
@@ -308,10 +565,9 @@
       const shiftProgress = newUnits - prevUnits;
       const isBlocked = status.includes('Awaiting');
 
-      // ENFORCE JUSTIFICATION IF LOW SHIFT PROGRESS (< 2 UNITS) OR BLOCKED
       if ((shiftProgress < 2 && status !== 'Complete') || isBlocked) {
         if (!note && preset === 'Target Achieved') {
-          alert("🛑 REASON REQUIRED:\nProgress this shift is below expected target (2 units/cycles). Please select or type the exact reason for delay/stoppage.");
+          alert("🛑 REASON REQUIRED:\nProgress this shift is below expected target. Please select or type the exact reason for delay/stoppage.");
           return;
         }
       }
@@ -337,6 +593,7 @@
 
     // Initial Load
     fetchTasks();
+    fetchAttendance();
   </script>
 </body>
 </html>
