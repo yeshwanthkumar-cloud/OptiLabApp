@@ -11,9 +11,6 @@ init_db()
 def index():
     return render_template('index.html')
 
-# -----------------------------------------------------------------------------
-# GET TASKS & STATIONS
-# -----------------------------------------------------------------------------
 @app.route('/api/tasks/<lab_name>')
 def get_tasks(lab_name):
     conn = get_connection()
@@ -103,71 +100,27 @@ def create_task():
     conn.close()
     return jsonify({"success": True, "master_id": master_id})
 
-@app.route('/api/start_test', methods=['POST'])
-def start_test():
-    data = request.json
-    task_id = data.get('task_id')
-    chamber_id = data.get('chamber_id', 'Chamber-1')
-    cycler_id = data.get('cycler_id', 'EA Cycler #1')
-    slot_id = data.get('slot_id', 'Slot A')
-    operator = data.get('operator', 'Technician')
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+# -----------------------------------------------------------------------------
+# ROSTER APIS (ROBUST & FAST)
+# -----------------------------------------------------------------------------
+@app.route('/api/get_roster_matrix/<lab_name>/<year_month>')
+def get_roster_matrix(lab_name, year_month):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("UPDATE master_tasks SET status = 'Running', chamber_id = ?, cycler_id = ?, slot_id = ? WHERE task_id = ?",
-              (chamber_id, cycler_id, slot_id, task_id))
-    
-    c.execute("INSERT INTO audit_log (timestamp, lab_name, shift, task_id, operator, action, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-              (timestamp, data.get('lab_name'), data.get('shift'), task_id, operator, f"Started Test on {chamber_id} ({slot_id})", f"Station assigned: {chamber_id} - {cycler_id}"))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/update_progress', methods=['POST'])
-def update_progress():
-    data = request.json
-    task_id = data.get('task_id')
-    added_units = int(data.get('completed_units', 0))
-    status = data.get('status')
-    observation_text = data.get('observation_text', '')
-    stoppage_reason = data.get('stoppage_reason', '')
-    operator = data.get('operator', 'Technician')
-    shift = data.get('shift', 'Shift A')
-    lab = data.get('lab_name')
-
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT completed_units, target_units, observations FROM master_tasks WHERE task_id = ?", (task_id,))
-    r = c.fetchone()
-    
-    if r:
-        new_units = r[0] + added_units
-        target = r[1]
-        existing_obs = r[2] or ""
-        
-        final_status = "Completed" if (target > 0 and new_units >= target) else status
-        pct = f"{int((new_units/target)*100)}%" if target > 0 else "100%"
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        updated_obs = f"{existing_obs}\n[{timestamp} - {operator} ({shift})]: {observation_text}".strip()
-
-        c.execute("UPDATE master_tasks SET completed_units = ?, status = ?, progress_percent = ?, observations = ?, stoppage_reason = ? WHERE task_id = ?",
-                  (new_units, final_status, pct, updated_obs, stoppage_reason, task_id))
-        
-        c.execute("INSERT INTO audit_log (timestamp, lab_name, shift, task_id, operator, action, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                  (timestamp, lab, shift, task_id, operator, f"Logged +{added_units} units. Status: {final_status}", f"{observation_text} {('Stoppage: ' + stoppage_reason) if stoppage_reason else ''}"))
-
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/get_roster_matrix/<lab_name>')
-def get_roster_matrix(lab_name):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ?", (lab_name,))
+    c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ? AND year_month = ?", (lab_name, year_month))
     rows = c.fetchall()
+    
+    # If month has no entries, seed automatically from associates master
+    if not rows:
+        c.execute("SELECT associate_name FROM associates_master WHERE lab_name = ?", (lab_name,))
+        assocs = c.fetchall()
+        for a in assocs:
+            c.execute("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)",
+                      (lab_name, a[0], year_month))
+        conn.commit()
+        c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ? AND year_month = ?", (lab_name, year_month))
+        rows = c.fetchall()
+
     conn.close()
     
     matrix = []
@@ -186,8 +139,60 @@ def update_roster_day():
     day_col = f"day_{data.get('day_num')}"
     conn = get_connection()
     c = conn.cursor()
-    c.execute(f"UPDATE monthly_roster_matrix SET {day_col} = ? WHERE lab_name = ? AND operator_name = ?",
-              (data.get('status_code'), data.get('lab_name'), data.get('operator_name')))
+    c.execute(f"UPDATE monthly_roster_matrix SET {day_col} = ? WHERE lab_name = ? AND operator_name = ? AND year_month = ?",
+              (data.get('status_code'), data.get('lab_name'), data.get('operator_name'), data.get('year_month', '2026-09')))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/delete_associate', methods=['POST'])
+def delete_associate():
+    data = request.json
+    lab_name = data.get('lab_name')
+    name = data.get('operator_name')
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM associates_master WHERE lab_name = ? AND associate_name = ?", (lab_name, name))
+    c.execute("DELETE FROM monthly_roster_matrix WHERE lab_name = ? AND operator_name = ?", (lab_name, name))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/edit_associate_name', methods=['POST'])
+def edit_associate_name():
+    data = request.json
+    lab_name = data.get('lab_name')
+    old_name = data.get('old_name')
+    new_name = data.get('new_name')
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("UPDATE associates_master SET associate_name = ? WHERE lab_name = ? AND associate_name = ?", (new_name, lab_name, old_name))
+    c.execute("UPDATE monthly_roster_matrix SET operator_name = ? WHERE lab_name = ? AND operator_name = ?", (new_name, lab_name, old_name))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+@app.route('/api/clone_roster', methods=['POST'])
+def clone_roster():
+    data = request.json
+    lab_name = data.get('lab_name')
+    curr_month = data.get('current_month')
+    next_month = data.get('next_month')
+
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ? AND year_month = ?", (lab_name, curr_month))
+    rows = c.fetchall()
+
+    for r in rows:
+        c.execute("DELETE FROM monthly_roster_matrix WHERE lab_name = ? AND operator_name = ? AND year_month = ?", (lab_name, r[2], next_month))
+        vals = [lab_name, r[2], next_month] + list(r[4:])
+        c.execute("""
+            INSERT INTO monthly_roster_matrix 
+            (lab_name, operator_name, year_month, day_1, day_2, day_3, day_4, day_5, day_6, day_7, day_8, day_9, day_10, day_11, day_12, day_13, day_14, day_15, day_16, day_17, day_18, day_19, day_20, day_21, day_22, day_23, day_24, day_25, day_26, day_27, day_28, day_29, day_30, day_31)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, vals)
+
     conn.commit()
     conn.close()
     return jsonify({"success": True})
@@ -210,10 +215,14 @@ def get_masters(lab_name):
 @app.route('/api/add_associate', methods=['POST'])
 def add_associate():
     data = request.json
+    lab_name = data.get('lab_name')
+    name = data.get('name')
+    role = data.get('role', 'Technician')
+
     conn = get_connection()
     c = conn.cursor()
-    c.execute("INSERT INTO associates_master (lab_name, associate_name, role_title) VALUES (?, ?, ?)", (data.get('lab_name'), data.get('name'), data.get('role', 'Technician')))
-    c.execute("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", (data.get('lab_name'), data.get('name'), "2026-09"))
+    c.execute("INSERT INTO associates_master (lab_name, associate_name, role_title) VALUES (?, ?, ?)", (lab_name, name, role))
+    c.execute("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", (lab_name, name, "2026-09"))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
@@ -227,18 +236,6 @@ def add_component():
     conn.commit()
     conn.close()
     return jsonify({"success": True})
-
-@app.route('/api/attendance_punch', methods=['POST'])
-def attendance_punch():
-    data = request.json
-    conn = get_connection()
-    c = conn.cursor()
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    c.execute("INSERT INTO attendance_ledger (timestamp, operator, shift, lab_name, punch_type, s5_verified, s5_score) VALUES (?, ?, ?, ?, ?, 1, ?)",
-              (timestamp, data.get('operator'), data.get('shift', 'Shift A'), data.get('lab_name'), data.get('punch_type'), data.get('s5_score', 100)))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True, "timestamp": timestamp})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
