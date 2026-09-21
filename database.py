@@ -37,6 +37,18 @@ def init_db():
         )
     ''')
 
+    # Custom Equipment Stations / SCADA Floor Layout Builder Table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS equipment_stations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lab_name TEXT,
+            station_code TEXT,
+            display_name TEXT,
+            room_zone TEXT DEFAULT 'Room-1',
+            grafana_url TEXT DEFAULT 'https://grafana.com'
+        )
+    ''')
+
     # Custom Dynamic Test Flows
     c.execute('''
         CREATE TABLE IF NOT EXISTS custom_flows (
@@ -110,7 +122,26 @@ def init_db():
         )
     ''')
 
-    # Seed Master Associates if empty
+    # Seed Default Equipment Stations if empty
+    c.execute("SELECT COUNT(*) FROM equipment_stations")
+    if c.fetchone()[0] == 0:
+        station_seeds = [
+            ('BatteryLab_Tasks', 'Chamber-1', 'Environmental Chamber-1', 'Room-1', 'https://grafana.com/d/chamber1'),
+            ('BatteryLab_Tasks', 'Chamber-3', 'Environmental Chamber-3', 'Room-1', 'https://grafana.com/d/chamber3'),
+            ('BatteryLab_Tasks', 'Chamber-4', 'Environmental Chamber-4', 'Room-1', 'https://grafana.com/d/chamber4'),
+            ('BatteryLab_Tasks', 'Chamber-7', 'Environmental Chamber-7', 'Room-1', 'https://grafana.com/d/chamber7'),
+            ('BatteryLab_Tasks', 'Chamber-8', 'Environmental Chamber-8', 'Room-1', 'https://grafana.com/d/chamber8'),
+            ('BatteryLab_Tasks', 'Hiacc', 'Hiacc Chamber', 'Room-1', 'https://grafana.com/d/hiacc'),
+            ('BatteryLab_Tasks', 'EA-1', 'EA Cycler #1', 'Room-1', 'https://grafana.com/d/eacycler1'),
+            ('BatteryLab_Tasks', 'EA-2', 'EA Cycler #2', 'Room-1', 'https://grafana.com/d/eacycler2'),
+            ('BatteryLab_Tasks', 'ITECH-Cycler', 'ITECH Cycler', 'Room-1', 'https://grafana.com/d/itech'),
+            ('BatteryLab_Tasks', 'Neware-4Ch', 'Neware 4-Ch', 'Room-1', 'https://grafana.com/d/neware'),
+            ('BatteryLab_Tasks', 'Air-Leak', 'Air Leak Tester', 'Room-2', 'https://grafana.com/d/airleak'),
+            ('BatteryLab_Tasks', '4-Channel', '4-Channel Bench', 'Room-2', 'https://grafana.com/d/4channel')
+        ]
+        c.executemany("INSERT INTO equipment_stations (lab_name, station_code, display_name, room_zone, grafana_url) VALUES (?, ?, ?, ?, ?)", station_seeds)
+
+    # Seed Associates
     c.execute("SELECT COUNT(*) FROM associates_master")
     if c.fetchone()[0] == 0:
         assoc_seeds = [
@@ -128,7 +159,7 @@ def init_db():
         ]
         c.executemany("INSERT INTO associates_master (lab_name, associate_name, role_title) VALUES (?, ?, ?)", assoc_seeds)
 
-    # Seed Roster Matrix for Battery Lab
+    # Seed Roster Matrix
     c.execute("SELECT COUNT(*) FROM monthly_roster_matrix")
     if c.fetchone()[0] == 0:
         roster_seeds = [
@@ -141,32 +172,22 @@ def init_db():
         ]
         c.executemany("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", roster_seeds)
 
-    # Seed Default Component Categories
+    # Seed Component Categories Across All Labs
     c.execute("SELECT COUNT(*) FROM components_master")
     if c.fetchone()[0] == 0:
         comp_seeds = [
             ('BatteryLab_Tasks', '450 Pack'),
             ('BatteryLab_Tasks', 'DIESEL Pack'),
             ('BatteryLab_Tasks', 'EL Pack'),
-            ('CellLab_Tasks', 'NMC Cell'),
-            ('CellLab_Tasks', 'LFP Cell'),
-            ('Vibration_Tasks', 'Mounting Bracket'),
-            ('EELab_Tasks', 'BMS Board')
+            ('CellLab_Tasks', 'NMC 2170 Cell'),
+            ('CellLab_Tasks', 'LFP Pouch Cell'),
+            ('CellLab_Tasks', 'Prismatic Module'),
+            ('Vibration_Tasks', 'Battery Mounting Bracket'),
+            ('Vibration_Tasks', 'Motor Mount Jig'),
+            ('EELab_Tasks', 'Master BMS Board'),
+            ('EELab_Tasks', 'High Voltage Wire Harness')
         ]
         c.executemany("INSERT INTO components_master (lab_name, component_name) VALUES (?, ?)", comp_seeds)
-
-    # Seed Default Flow Blueprints
-    c.execute("SELECT COUNT(*) FROM custom_flows")
-    if c.fetchone()[0] == 0:
-        flow_seeds = [
-            ('BatteryLab_Tasks', 'TL-1 Standard', 1, 'Pre-Capacity Check'),
-            ('BatteryLab_Tasks', 'TL-1 Standard', 2, 'Pre-Aging Chamber Soak'),
-            ('BatteryLab_Tasks', 'TL-1 Standard', 3, 'Vibration Profile Run'),
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 1, 'Pre-Test Inspection'),
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 2, 'Life Cycle Cycling Run'),
-            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 3, 'Post Capacity Check')
-        ]
-        c.executemany("INSERT INTO custom_flows (lab_name, flow_name, step_order, step_name) VALUES (?, ?, ?, ?)", flow_seeds)
 
     conn.commit()
     conn.close()
