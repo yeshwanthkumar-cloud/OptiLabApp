@@ -14,7 +14,7 @@
   
   <style>
     /* ==========================================================================
-       1. GLOBAL ENTERPRISE DARWINBOX THEME STYLES
+       ENTERPRISE DARWINBOX UI THEME & SCADA CUSTOM STYLES
        ========================================================================== */
     :root {
       --primary-slate: #0f172a;
@@ -47,15 +47,19 @@
     .scada-tile {
       transition: all 0.25s ease;
       border-radius: 16px;
-      border: 2px solid #e2e8f0;
+      border: 2px solid #cbd5e1;
       background: #ffffff;
-      cursor: pointer;
+      cursor: grab;
+      user-select: none;
+      min-width: 150px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
     }
 
-    .scada-tile:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 20px -5px rgba(37, 99, 235, 0.12);
-      border-color: #3b82f6;
+    .scada-tile:active {
+      cursor: grabbing;
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
     }
 
     .status-running {
@@ -71,6 +75,17 @@
     .status-idle {
       border-color: #cbd5e1 !important;
       background: #ffffff !important;
+    }
+
+    /* Interactive Floor Canvas Grid Background */
+    .floor-canvas {
+      background-color: #f8fafc;
+      background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      min-height: 380px;
+      position: relative;
+      border: 2px dashed #cbd5e1;
+      border-radius: 24px;
     }
 
     /* Roster Matrix Shift Cell Color System */
@@ -119,9 +134,6 @@
       background: #cbd5e1;
       border-radius: 10px;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
   </style>
 </head>
 <body class="h-full flex overflow-hidden bg-slate-50 text-slate-800">
@@ -137,28 +149,24 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl w-full px-4">
-      <button onclick="enterDepartment('BatteryLab_Tasks', 'BATTERY LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+      <button onclick="enterDepartment('BatteryLab_Tasks', 'BATTERY LAB')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
         <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">🔋</div>
         <span class="font-black text-base text-slate-900 uppercase tracking-wider">BATTERY LAB</span>
-        <span class="text-[10px] text-slate-400 font-bold">Pack Testing & Envisys SCADA</span>
       </button>
 
-      <button onclick="enterDepartment('CellLab_Tasks', 'CELL LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+      <button onclick="enterDepartment('CellLab_Tasks', 'CELL LAB')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
         <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">🧪</div>
         <span class="font-black text-base text-slate-900 uppercase tracking-wider">CELL LAB</span>
-        <span class="text-[10px] text-slate-400 font-bold">Cell Characterization</span>
       </button>
 
-      <button onclick="enterDepartment('Vibration_Tasks', 'VIBRATION TEAM')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+      <button onclick="enterDepartment('Vibration_Tasks', 'VIBRATION TEAM')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
         <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚡</div>
         <span class="font-black text-base text-slate-900 uppercase tracking-wider">VIBRATION TEAM</span>
-        <span class="text-[10px] text-slate-400 font-bold">Shaker & Mechanical Shock</span>
       </button>
 
-      <button onclick="enterDepartment('EELab_Tasks', 'E&E LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+      <button onclick="enterDepartment('EELab_Tasks', 'E&E LAB')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
         <div class="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚙️</div>
         <span class="font-black text-base text-slate-900 uppercase tracking-wider">E&E LAB</span>
-        <span class="text-[10px] text-slate-400 font-bold">BMS & Harness Validation</span>
       </button>
     </div>
 
@@ -179,7 +187,7 @@
       
       <nav class="flex-1 flex flex-col items-center gap-5 w-full px-2">
         <button onclick="switchView('mod-workbench')" id="snav-workbench" title="Shift Workbench" class="nav-tab w-12 h-12 rounded-2xl active flex items-center justify-center text-xl transition hover:bg-blue-600 hover:text-white">☀️</button>
-        <button onclick="switchView('mod-observation')" id="snav-observation" title="SCADA Floor Twin Map" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">🗺️</button>
+        <button onclick="switchView('mod-observation')" id="snav-observation" title="SCADA Dynamic Twin Canvas Builder" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">🗺️</button>
         <button onclick="switchView('mod-roster')" id="snav-roster" title="Shift Rotation Matrix Roster" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📅</button>
         <button onclick="switchView('mod-exec-dashboard')" id="snav-exec-dashboard" title="Executive DVP Execution Matrix" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📊</button>
         <button onclick="switchView('mod-planner')" id="snav-planner" title="Task Planner & Component Masters" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📋</button>
@@ -295,7 +303,7 @@
 
             <div class="space-y-3">
               <div class="flex justify-between items-center px-2">
-                <span class="font-extrabold text-xs text-rose-600 uppercase tracking-wider">Blocked / Stoppage 🛑</span>
+                <span class="font-extrabold text-xs text-rose-600 uppercase tracking-wider">Blocked / Issue 🛑</span>
                 <span id="count-blocked" class="bg-rose-100 text-rose-800 font-black text-[10px] px-2.5 py-0.5 rounded-full">0</span>
               </div>
               <div id="col-blocked" class="space-y-3 min-h-[350px]"></div>
@@ -305,34 +313,31 @@
 
 
         <!-- ==================================================================== -->
-        <!-- MODULE 2: ENVISYS ET-600 SCADA FLOOR MAP (MULTI-PACK TILES)           -->
+        <!-- MODULE 2: INTERACTIVE CUSTOM FLOOR CANVAS LAYOUT BUILDER             -->
         <!-- ==================================================================== -->
         <section id="mod-observation" class="hidden space-y-6">
           <div class="dw-card p-6 space-y-6">
             <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-4 gap-4">
               <div>
-                <h3 class="text-sm font-black text-slate-900 uppercase">Envisys ET-600 SCADA Floor Layout Twin</h3>
-                <p class="text-xs font-semibold text-slate-400 mt-0.5">Environmental Chambers hold up to 3 battery packs simultaneously (3 Grafana Links).</p>
+                <h3 class="text-sm font-black text-slate-900 uppercase">Custom Visual Floor Layout Builder Canvas</h3>
+                <p class="text-xs font-semibold text-slate-400 mt-0.5">Click anywhere on the grid canvas to drop an equipment station tile, or drag blocks into place.</p>
               </div>
 
-              <button onclick="openAddStationModal()" class="bg-purple-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md hover:bg-purple-700 transition flex items-center gap-1.5">
-                <span>➕</span> Add Custom Chamber / Station
-              </button>
+              <div class="flex items-center gap-3">
+                <button onclick="openAddStationModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5">
+                  <span>➕</span> Add Equipment Station Block
+                </button>
+              </div>
             </div>
 
-            <div class="space-y-6">
-              <div class="space-y-2">
-                <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Room-1 Primary Envisys Bay</span>
-                <div id="container-room1-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Interactive Lab Grid Canvas (Room-1 & Room-2)</span>
+                <span class="text-[11px] font-bold text-slate-400">Click tile to view multi-pack telemetry</span>
               </div>
-
-              <div class="w-full bg-slate-900 text-emerald-400 font-mono text-xs font-black py-3 rounded-2xl text-center tracking-widest uppercase shadow-inner">
-                ─── MAIN LAB WALKWAY & LOGISTICS PASSAGE ───
-              </div>
-
-              <div class="space-y-2">
-                <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Room-2 Secondary Testing Bay</span>
-                <div id="container-room2-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+              
+              <div id="floor-canvas-area" onclick="handleFloorCanvasClick(event)" class="floor-canvas p-6 flex flex-wrap gap-4 items-start">
+                <!-- Interactive Equipment Tiles Dynamically Appended Here -->
               </div>
             </div>
           </div>
@@ -357,7 +362,7 @@
                 </div>
               </div>
 
-              <button onclick="cloneScheduleToNextMonth()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">📋 Clone to Next Month</button>
+              <button onclick="cloneScheduleToNextMonth()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">📋 Clone Schedule to Next Month</button>
             </div>
 
             <div class="overflow-x-auto">
@@ -366,7 +371,9 @@
                   <tr class="bg-slate-900 text-white text-[10px] font-black uppercase">
                     <th class="p-3 rounded-l-xl w-28">Emp ID</th>
                     <th class="p-3 w-36">Name</th>
-                    <script>for(let d=1; d<=31; d++){ document.write(`<th class="p-1 text-center w-7">${d}</th>`); }</script>
+                    <script>
+                      for(let d=1; d<=31; d++){ document.write(`<th class="p-1 text-center w-7">${d}</th>`); }
+                    </script>
                     <th class="p-3 rounded-r-xl w-20 text-center">Edit</th>
                   </tr>
                 </thead>
@@ -562,103 +569,35 @@
   <!-- MODALS & POPUPS                                                      -->
   <!-- ==================================================================== -->
 
-  <!-- START TEST MODAL -->
-  <div id="modal-start-test" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <!-- ADD STATION MODAL WITH GRAFANA LINK FIELD -->
+  <div id="modal-add-station" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-sm text-slate-900">▶️ Initiate Test Step & Station Allocation</h3>
-        <button onclick="closeStartTestModal()" class="text-slate-400 font-bold text-lg">&times;</button>
+        <h3 class="font-extrabold text-sm text-slate-900">➕ Add Custom Equipment Block</h3>
+        <button onclick="closeAddStationModal()" class="text-slate-400 font-bold text-lg">&times;</button>
       </div>
 
-      <input type="hidden" id="start-task-id-val">
-
       <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Select Envisys Chamber or Station *</label>
-          <select id="start-chamber-id" class="w-full bg-slate-50 border-none font-bold text-xs p-3 rounded-2xl text-slate-900">
-            <option value="Chamber-1">Envisys ET-600 Chamber-1</option>
-            <option value="Chamber-3">Envisys ET-600 Chamber-3</option>
-            <option value="Chamber-4">Envisys ET-600 Chamber-4</option>
-            <option value="EA-1">EA Cycler #1</option>
-            <option value="Channel-1">Bench Channel 1</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Chamber Multi-Pack Slot *</label>
-          <select id="start-slot-id" class="w-full bg-slate-50 border-none font-bold text-xs p-3 rounded-2xl text-slate-900">
-            <option value="Slot A">Slot A (Left Rack)</option>
-            <option value="Slot B">Slot B (Middle Rack)</option>
-            <option value="Slot C">Slot C (Right Rack)</option>
-          </select>
-        </div>
+        <div><label class="block font-bold text-slate-500 mb-1">Station Code ID *</label><input type="text" id="pop-st-code" placeholder="e.g. Chamber-12" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Display Name *</label><input type="text" id="pop-st-name" placeholder="e.g. Envisys ET-600 #12" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Type *</label><select id="pop-st-type" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"><option value="Chamber">Chamber (Envisys ET-600)</option><option value="Cycler">Cycler Rack</option><option value="Channel">Bench Channel</option></select></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Custom Grafana Telemetry Dashboard URL *</label><input type="text" id="pop-st-grafana" value="https://grafana.com" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
       </div>
 
       <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-        <button onclick="closeStartTestModal()" class="bg-slate-100 text-slate-600 font-bold px-4 py-2.5 rounded-xl text-xs">Cancel</button>
-        <button onclick="submitStartTestModal()" class="bg-emerald-600 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md">Confirm & Start Test ➔</button>
+        <button onclick="closeAddStationModal()" class="bg-slate-100 text-slate-600 font-bold px-4 py-2.5 rounded-xl text-xs">Cancel</button>
+        <button onclick="submitAddStation()" class="bg-purple-600 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md">Add Tile to Floor Canvas ➔</button>
       </div>
     </div>
   </div>
 
-  <!-- PROGRESS & STOPPAGE LOGGING MODAL -->
-  <div id="modal-task-progress" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div>
-          <h3 class="font-extrabold text-sm text-slate-900">Log Shift Progress & Findings</h3>
-          <p id="lbl-pop-task-id" class="text-xs font-mono text-blue-600 font-bold mt-0.5"></p>
-        </div>
-        <button onclick="closeProgressModal()" class="text-slate-400 font-bold text-lg">&times;</button>
-      </div>
-
-      <input type="hidden" id="pop-task-id-val">
-
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Execution Status *</label>
-          <select id="pop-task-status" onchange="toggleStoppageReason(this.value)" class="w-full bg-slate-50 border-none font-bold text-xs p-3 rounded-2xl text-slate-900">
-            <option value="Running">Running 🟢 (In Progress)</option>
-            <option value="Completed">Completed ✅ (Target Met)</option>
-            <option value="Blocked">Blocked / Stoppage 🛑 (3M Issue)</option>
-          </select>
-        </div>
-
-        <div id="box-stoppage-reason" class="hidden">
-          <label class="block font-bold text-rose-600 mb-1">Mandatory Stoppage Reason *</label>
-          <select id="pop-stoppage-reason" class="w-full bg-rose-50 border border-rose-200 font-bold text-xs p-3 rounded-2xl text-rose-900">
-            <option value="Chamber Temperature Trip">Chamber Temperature Trip</option>
-            <option value="Cycler Harness / Cable Loose">Cycler Harness / Cable Loose</option>
-            <option value="Facility Power Outage">Facility Power Outage</option>
-            <option value="Cell Voltage Delta Error">Cell Voltage Delta Error</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Add Completed Cycles / Hours *</label>
-          <input type="number" id="pop-task-added-units" value="10" min="0" class="w-full bg-slate-50 border-none font-bold text-sm p-3 rounded-2xl">
-        </div>
-
-        <div>
-          <label class="block font-bold text-slate-500 mb-1">Shift Observations & Findings *</label>
-          <textarea id="pop-task-reason-note" rows="3" placeholder="Write observations or stoppage notes..." class="w-full bg-slate-50 border-none font-medium text-xs p-3 rounded-2xl"></textarea>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-        <button onclick="closeProgressModal()" class="bg-slate-100 text-slate-600 font-bold px-4 py-2.5 rounded-xl text-xs">Cancel</button>
-        <button onclick="submitTaskProgressModal()" class="bg-blue-600 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md">Save Progress ➔</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MULTI-PACK ENVISYS ET-600 TELEMETRY MODAL -->
+  <!-- MULTI-PACK GRAFANA TELEMETRY MODAL -->
   <div id="modal-grafana" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 max-w-xl w-full space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <div>
           <h3 class="font-extrabold text-sm text-slate-900" id="lbl-grafana-station">Envisys ET-600 Chamber Telemetry</h3>
-          <p class="text-xs font-bold text-emerald-600 mt-0.5">Multi-Pack Active Stream (Up to 3 Packs)</p>
+          <p class="text-xs font-bold text-emerald-600 mt-0.5">Multi-Pack Active Telemetry Stream (Up to 3 Packs)</p>
         </div>
         <button onclick="closeGrafanaModal()" class="text-slate-400 font-bold text-lg">&times;</button>
       </div>
@@ -671,7 +610,7 @@
     </div>
   </div>
 
-  <!-- USER GUIDE & HELP DRAWER -->
+  <!-- USER GUIDE & HELP MANUAL DRAWER -->
   <div id="modal-guide-drawer" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 max-w-2xl w-full space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -691,8 +630,8 @@
         </div>
 
         <div class="bg-amber-50/60 p-4 rounded-2xl border border-amber-100 space-y-1">
-          <h4 class="font-black text-amber-900 text-xs uppercase">3. 3M Stoppage Logging & 5S Verification</h4>
-          <p>When tests are blocked, mandatory 3M stoppage reasons must be selected. Handover compliance is validated via the 5S handover checklist.</p>
+          <h4 class="font-black text-amber-900 text-xs uppercase">3. Custom SCADA Layout Builder</h4>
+          <p>Click on the floor canvas grid in the SCADA Floor Twin tab to create new equipment blocks. Enter custom Grafana telemetry links for each station.</p>
         </div>
       </div>
 
@@ -734,7 +673,7 @@
     }
 
     function switchView(modId) {
-      ['mod-workbench', 'mod-observation', 'mod-roster', 'mod-exec-dashboard', 'mod-planner', 'mod-analytics'].forEach(m => {
+      ['mod-workbench', 'mod-observation', 'mod-roster', 'mod-exec-dashboard', 'mod-planner', 'mod-history', 'mod-analytics'].forEach(m => {
         document.getElementById(m).classList.add('hidden');
       });
 
@@ -774,14 +713,14 @@
       fetch('/api/tasks/' + curLab).then(res => res.json()).then(data => {
         globalTasks = data;
         renderKanban();
-        renderSCADAGrid();
+        renderFloorCanvas();
       });
     }
 
     function fetchStations() {
       fetch('/api/get_stations/' + curLab).then(res => res.json()).then(data => {
         labStations = data;
-        renderSCADAGrid();
+        renderFloorCanvas();
       });
     }
 
@@ -825,19 +764,17 @@
       renderGeneratedSteps();
     }
 
-    function renderSCADAGrid() {
-      const room1 = document.getElementById('container-room1-grid');
-      const room2 = document.getElementById('container-room2-grid');
-      if (!room1 || !room2) return;
-
-      room1.innerHTML = ""; room2.innerHTML = "";
+    function renderFloorCanvas() {
+      const area = document.getElementById('floor-canvas-area');
+      if (!area) return;
+      area.innerHTML = "";
 
       if (labStations.length === 0) {
         labStations = [
-          { station_code: 'Chamber-1', display_name: 'Chamber-1', station_type: 'Chamber', room_zone: 'Room-1', grafana_url: 'https://grafana.com' },
-          { station_code: 'Chamber-3', display_name: 'Chamber-3', station_type: 'Chamber', room_zone: 'Room-1', grafana_url: 'https://grafana.com' },
-          { station_code: 'EA-1', display_name: 'EA Cycler #1', station_type: 'Cycler', room_zone: 'Room-1', grafana_url: 'https://grafana.com' },
-          { station_code: 'Channel-1', display_name: 'Bench Channel 1', station_type: 'Channel', room_zone: 'Room-2', grafana_url: 'https://grafana.com' }
+          { station_code: 'Chamber-1', display_name: 'Envisys ET-600 #1', station_type: 'Chamber', room_zone: 'Room-1', grafana_url: 'https://grafana.com/d/chamber1' },
+          { station_code: 'Chamber-3', display_name: 'Envisys ET-600 #3', station_type: 'Chamber', room_zone: 'Room-1', grafana_url: 'https://grafana.com/d/chamber3' },
+          { station_code: 'EA-1', display_name: 'EA Cycler #1', station_type: 'Cycler', room_zone: 'Room-1', grafana_url: 'https://grafana.com/d/eacycler' },
+          { station_code: 'Channel-1', display_name: 'Bench Channel 1', station_type: 'Channel', room_zone: 'Room-2', grafana_url: 'https://grafana.com/d/ch1' }
         ];
       }
 
@@ -848,7 +785,7 @@
         let packInfoHtml = "";
         if (activeTasks.length > 0) {
           activeTasks.forEach(t => {
-            packInfoHtml += `<span class="font-mono text-[9px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded block mt-0.5">${t.slot_id}: ${t.bin_pack}</span>`;
+            packInfoHtml += `<span class="font-mono text-[9px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded block mt-0.5">${t.slot_id || 'Slot A'}: ${t.bin_pack}</span>`;
           });
         } else {
           packInfoHtml = `<span class="font-mono text-[10px] font-extrabold text-slate-400 block mt-1">IDLE</span>`;
@@ -857,17 +794,20 @@
         const isChamber = st.station_type === 'Chamber';
         const imageSvg = isChamber ? `<div class="text-3xl">🧊</div>` : `<div class="text-2xl">⚡</div>`;
 
-        const tileHtml = `
-          <div onclick="openGrafanaModalStation('${st.station_code}', '${st.grafana_url}')" class="scada-tile dw-card p-4 text-center ${statusClass}">
+        area.innerHTML += `
+          <div draggable="true" onclick="openGrafanaModalStation('${st.station_code}', '${st.grafana_url}')" class="scada-tile dw-card ${statusClass}">
             ${imageSvg}
             <span class="text-xs font-black text-slate-800 block mt-1">${st.display_name}</span>
             ${packInfoHtml}
           </div>
         `;
-
-        if (st.room_zone === 'Room-2') room2.innerHTML += tileHtml;
-        else room1.innerHTML += tileHtml;
       });
+    }
+
+    function handleFloorCanvasClick(e) {
+      if (e.target.id === 'floor-canvas-area') {
+        openAddStationModal();
+      }
     }
 
     function openGrafanaModalStation(stationCode, defaultGrafanaUrl) {
@@ -881,12 +821,12 @@
           container.innerHTML += `
             <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
               <div class="flex justify-between items-center">
-                <span class="font-bold text-xs text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${t.slot_id} • Pack ${t.bin_pack}</span>
-                <span class="text-[10px] font-bold text-blue-600 font-mono">${t.progress_percent}</span>
+                <span class="font-bold text-xs text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${t.slot_id || 'Slot A'} • Pack ${t.bin_pack}</span>
+                <span class="text-[10px] font-bold text-blue-600 font-mono">${t.progress_percent || '0%'}</span>
               </div>
               <p class="text-xs font-bold text-slate-800">${t.dvp_name}</p>
               <a href="${defaultGrafanaUrl}" target="_blank" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] py-2 rounded-xl flex items-center justify-center gap-1.5 transition">
-                <span>📊</span> Open Live Grafana Telemetry (${t.slot_id}) ➔
+                <span>📊</span> Open Live Grafana Telemetry (${t.slot_id || 'Slot A'}) ➔
               </a>
             </div>
           `;
@@ -911,60 +851,36 @@
     function openGuideModal() { document.getElementById('modal-guide-drawer').classList.remove('hidden'); }
     function closeGuideModal() { document.getElementById('modal-guide-drawer').classList.add('hidden'); }
 
-    function openStartTestModal(taskId) {
-      document.getElementById('start-task-id-val').value = taskId;
-      document.getElementById('modal-start-test').classList.remove('hidden');
-    }
+    function submitAddStation() {
+      const code = document.getElementById('pop-st-code').value.trim();
+      const name = document.getElementById('pop-st-name').value.trim();
+      const type = document.getElementById('pop-st-type').value;
+      const url = document.getElementById('pop-st-grafana').value.trim();
 
-    function closeStartTestModal() { document.getElementById('modal-start-test').classList.add('hidden'); }
+      if (!code || !name) return alert("Please enter station code and name.");
 
-    function submitStartTestModal() {
-      const taskId = document.getElementById('start-task-id-val').value;
-      const chamberId = document.getElementById('start-chamber-id').value;
-      const slotId = document.getElementById('start-slot-id').value;
-
-      fetch('/api/start_test', {
+      fetch('/api/add_station', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task_id: taskId, chamber_id: chamberId, slot_id: slotId, lab_name: curLab, shift: document.getElementById('sel-shift-filter').value })
+        body: JSON.stringify({ lab_name: curLab, station_code: code, display_name: name, station_type: type, room_zone: 'Room-1', grafana_url: url })
       }).then(() => {
-        closeStartTestModal();
-        fetchTasks();
+        closeAddStationModal();
+        alert("✅ Custom Equipment Station Added!");
+        fetchStations();
       });
     }
 
-    function openProgressModal(taskId) {
-      document.getElementById('pop-task-id-val').value = taskId;
-      document.getElementById('lbl-pop-task-id').innerText = `Task ID: ${taskId}`;
-      document.getElementById('modal-task-progress').classList.remove('hidden');
-    }
-
-    function closeProgressModal() { document.getElementById('modal-task-progress').classList.add('hidden'); }
-
-    function toggleStoppageReason(val) {
-      const box = document.getElementById('box-stoppage-reason');
-      if (val === 'Blocked') box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function submitTaskProgressModal() {
-      const taskId = document.getElementById('pop-task-id-val').value;
-      const addedUnits = document.getElementById('pop-task-added-units').value;
-      const status = document.getElementById('pop-task-status').value;
-      const obs = document.getElementById('pop-task-reason-note').value;
-      const stoppage = status === 'Blocked' ? document.getElementById('pop-stoppage-reason').value : '';
-
-      fetch('/api/update_progress', {
+    function registerComponent() {
+      const name = document.getElementById('inp-comp-name').value.trim();
+      if (!name) return;
+      fetch('/api/add_component', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          task_id: taskId, completed_units: addedUnits, status: status,
-          observation_text: obs, stoppage_reason: stoppage, lab_name: curLab,
-          shift: document.getElementById('sel-shift-filter').value
-        })
+        body: JSON.stringify({ lab_name: curLab, name: name })
       }).then(() => {
-        closeProgressModal();
-        fetchTasks();
+        document.getElementById('inp-comp-name').value = "";
+        alert("✅ Tested Component Category Registered!");
+        fetchMasters();
       });
     }
 
@@ -978,44 +894,24 @@
       const selectedShift = document.getElementById('sel-shift-filter').value;
       const activeSubs = globalTasks.filter(t => t.target_shift === selectedShift || t.status === 'Running' || t.status === 'Blocked');
 
-      let cntTodo = 0, cntRunning = 0, cntBlocked = 0;
-
       activeSubs.forEach(t => {
         const st = (t.status || 'To Do').toLowerCase();
-
         const cardHtml = `
           <div class="dw-card p-4 space-y-3 transition hover:border-blue-400">
             <div class="flex justify-between items-center">
-              <span class="font-mono text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">${t.task_id}</span>
-              <span class="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">${t.bin_pack}</span>
+              <span class="font-mono text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">${t.task_id}</span>
+              <span class="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full">${t.bin_pack}</span>
             </div>
-
             <div>
-              <span class="text-[10px] font-medium text-slate-400 uppercase block">DVP Step</span>
               <h4 class="text-xs font-black text-slate-900 mt-0.5">${t.dvp_name}</h4>
-              <p class="text-[10px] font-bold text-slate-500 mt-0.5">Station: ${t.chamber_id} (${t.slot_id})</p>
-            </div>
-
-            <div class="flex justify-between items-center text-xs bg-slate-50 p-2 rounded-xl border border-slate-100 font-bold">
-              <span class="text-slate-500">Progress:</span>
-              <span class="text-blue-600 font-mono">${t.completed_units} / ${t.target_units} ${t.unit_type} (${t.progress_percent})</span>
-            </div>
-
-            <div class="flex gap-2 pt-1">
-              ${st.includes('todo') ? `<button onclick="openStartTestModal('${t.task_id}')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-2 rounded-xl transition">▶️ Start Test</button>` : ''}
-              <button onclick="openProgressModal('${t.task_id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2 rounded-xl transition">Log Progress ➔</button>
+              <p class="text-[10px] font-bold text-slate-500 mt-0.5">Station: ${t.chamber_id || 'Chamber-1'}</p>
             </div>
           </div>
         `;
-
-        if (st.includes('running')) { colRunning.innerHTML += cardHtml; cntRunning++; }
-        else if (st.includes('block')) { colBlocked.innerHTML += cardHtml; cntBlocked++; }
-        else { colTodo.innerHTML += cardHtml; cntTodo++; }
+        if (st.includes('running')) colRunning.innerHTML += cardHtml;
+        else if (st.includes('block')) colBlocked.innerHTML += cardHtml;
+        else colTodo.innerHTML += cardHtml;
       });
-
-      document.getElementById('count-todo').innerText = cntTodo;
-      document.getElementById('count-running').innerText = cntRunning;
-      document.getElementById('count-blocked').innerText = cntBlocked;
     }
 
     function fetchRosterMatrix() {
@@ -1027,68 +923,28 @@
           let cells = "";
           for(let d=1; d<=31; d++) {
             const code = m.days[`day_${d}`] || 'A';
-            cells += `<td class="p-1 text-center"><span onclick="cycleRosterDay('${m.operator_name}', ${d}, '${code}')" class="rst-cell rst-cell-${code}">${code}</span></td>`;
+            cells += `<td class="p-1 text-center"><span class="rst-cell rst-cell-${code}">${code}</span></td>`;
           }
-          tbody.innerHTML += `<tr><td class="p-3 font-mono font-bold text-slate-400">${empIdx++}</td><td class="p-3 font-extrabold text-slate-900">${m.operator_name}</td>${cells}<td class="p-3 text-center"><button onclick="editEmpId('${m.operator_name}')" class="text-blue-600 font-bold text-[10px]">✏️ ID</button></td></tr>`;
+          tbody.innerHTML += `<tr><td class="p-3 font-mono font-bold text-slate-400">${empIdx++}</td><td class="p-3 font-extrabold text-slate-900">${m.operator_name}</td>${cells}</tr>`;
         });
       });
     }
 
-    function cycleRosterDay(operatorName, dayNum, currentCode) {
-      const seq = ['A', 'B', 'C', 'O', 'V', 'H', 'S'];
-      const nextCode = seq[(seq.indexOf(currentCode) + 1) % seq.length];
-
-      fetch('/api/update_roster_day', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lab_name: curLab, operator_name: operatorName, day_num: dayNum, status_code: nextCode })
-      }).then(() => fetchRosterMatrix());
-    }
-
-    function renderAnalyticsCharts() {
-      const cntA = globalTasks.filter(t => t.target_shift === 'Shift A' && t.status === 'Completed').length;
-      const cntB = globalTasks.filter(t => t.target_shift === 'Shift B' && t.status === 'Completed').length;
-      const cntC = globalTasks.filter(t => t.target_shift === 'Shift C' && t.status === 'Completed').length;
-
-      const ctxShift = document.getElementById('chartShiftComparison').getContext('2d');
-      if (chartShiftCompInst) chartShiftCompInst.destroy();
-      chartShiftCompInst = new Chart(ctxShift, {
-        type: 'bar',
-        data: { labels: ['Shift A', 'Shift B', 'Shift C'], datasets: [{ label: 'Tasks Completed', data: [cntA, cntB, cntC], backgroundColor: '#2563eb' }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
-      const ctxStop = document.getElementById('chartStoppage').getContext('2d');
-      if (chartStoppageInst) chartStoppageInst.destroy();
-      chartStoppageInst = new Chart(ctxStop, {
-        type: 'doughnut',
-        data: { labels: ['Chamber Trip', 'Cycler Harness', 'Power Outage'], datasets: [{ data: [5, 2, 1], backgroundColor: ['#ef4444', '#f59e0b', '#64748b'] }] },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
-    function clockInOperator() { alert("✅ Operator Clock In Recorded!"); }
-    function editEmpId(name) { alert(`✅ Employee ID updated for ${name}`); }
-    function cloneScheduleToNextMonth() { alert("✅ Roster cloned to next month!"); }
-    function exitToLanding() { document.getElementById('screen-console').classList.add('hidden'); document.getElementById('screen-landing').classList.remove('hidden'); }
-    function handleGlobalSearch(txt) { console.log("Searching: " + txt); }
-
     function handleCreateTask(e) {
       e.preventDefault();
-      const payload = {
-        lab_name: curLab,
-        bin_pack: document.getElementById('inp-bin').value,
-        dvp_name: document.getElementById('inp-dvp').value,
-        sprint_id: document.getElementById('inp-sprint-id').value,
-        steps: activeBlueprintSteps
-      };
-
       fetch('/api/create_task', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          lab_name: curLab,
+          bin_pack: document.getElementById('inp-bin').value,
+          dvp_name: document.getElementById('inp-dvp').value,
+          category: document.getElementById('inp-category').value,
+          sprint_id: document.getElementById('inp-sprint-id').value,
+          steps: activeBlueprintSteps
+        })
       }).then(() => {
-        alert("✅ Master Blueprint Task Generated!");
+        alert("✅ Task Blueprint Generated!");
         fetchTasks();
       });
     }
@@ -1135,6 +991,8 @@
         fetchFlows();
       });
     }
+
+    function exitToLanding() { document.getElementById('screen-console').classList.add('hidden'); document.getElementById('screen-landing').classList.remove('hidden'); }
   </script>
 </body>
 </html>
