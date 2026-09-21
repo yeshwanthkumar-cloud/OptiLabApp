@@ -110,7 +110,7 @@ def init_db():
         )
     ''')
 
-    # Seed Default Associates if empty
+    # Seed Master Associates if empty
     c.execute("SELECT COUNT(*) FROM associates_master")
     if c.fetchone()[0] == 0:
         assoc_seeds = [
@@ -128,7 +128,7 @@ def init_db():
         ]
         c.executemany("INSERT INTO associates_master (lab_name, associate_name, role_title) VALUES (?, ?, ?)", assoc_seeds)
 
-    # Seed Default Roster Matrix for Battery Lab
+    # Seed Roster Matrix for Battery Lab
     c.execute("SELECT COUNT(*) FROM monthly_roster_matrix")
     if c.fetchone()[0] == 0:
         roster_seeds = [
@@ -141,7 +141,7 @@ def init_db():
         ]
         c.executemany("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", roster_seeds)
 
-    # Seed Default Component Categories if empty
+    # Seed Default Component Categories
     c.execute("SELECT COUNT(*) FROM components_master")
     if c.fetchone()[0] == 0:
         comp_seeds = [
@@ -155,7 +155,7 @@ def init_db():
         ]
         c.executemany("INSERT INTO components_master (lab_name, component_name) VALUES (?, ?)", comp_seeds)
 
-    # Seed Default Flow Blueprints if empty
+    # Seed Default Flow Blueprints
     c.execute("SELECT COUNT(*) FROM custom_flows")
     if c.fetchone()[0] == 0:
         flow_seeds = [
