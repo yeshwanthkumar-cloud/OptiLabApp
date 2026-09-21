@@ -29,21 +29,24 @@ def init_db():
             unit_type TEXT,
             chamber_id TEXT,
             cycler_id TEXT,
+            slot_id TEXT DEFAULT 'Slot A',
             progress_percent TEXT,
             status TEXT,
             background TEXT,
             observations TEXT,
-            target_end_date TEXT
+            target_end_date TEXT,
+            stoppage_reason TEXT
         )
     ''')
 
-    # Custom Equipment Stations / SCADA Floor Layout Builder Table
+    # Custom Equipment Stations Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS equipment_stations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             lab_name TEXT,
             station_code TEXT,
             display_name TEXT,
+            station_type TEXT DEFAULT 'Chamber',
             room_zone TEXT DEFAULT 'Room-1',
             grafana_url TEXT DEFAULT 'https://grafana.com'
         )
@@ -95,7 +98,7 @@ def init_db():
         )
     ''')
 
-    # Attendance Ledger
+    # Attendance & 5S Handover Ledger
     c.execute('''
         CREATE TABLE IF NOT EXISTS attendance_ledger (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -104,7 +107,8 @@ def init_db():
             shift TEXT,
             lab_name TEXT,
             punch_type TEXT,
-            s5_verified INTEGER
+            s5_verified INTEGER DEFAULT 1,
+            s5_score INTEGER DEFAULT 100
         )
     ''')
 
@@ -122,24 +126,22 @@ def init_db():
         )
     ''')
 
-    # Seed Default Equipment Stations if empty
+    # Seed Default Equipment Stations
     c.execute("SELECT COUNT(*) FROM equipment_stations")
     if c.fetchone()[0] == 0:
         station_seeds = [
-            ('BatteryLab_Tasks', 'Chamber-1', 'Environmental Chamber-1', 'Room-1', 'https://grafana.com/d/chamber1'),
-            ('BatteryLab_Tasks', 'Chamber-3', 'Environmental Chamber-3', 'Room-1', 'https://grafana.com/d/chamber3'),
-            ('BatteryLab_Tasks', 'Chamber-4', 'Environmental Chamber-4', 'Room-1', 'https://grafana.com/d/chamber4'),
-            ('BatteryLab_Tasks', 'Chamber-7', 'Environmental Chamber-7', 'Room-1', 'https://grafana.com/d/chamber7'),
-            ('BatteryLab_Tasks', 'Chamber-8', 'Environmental Chamber-8', 'Room-1', 'https://grafana.com/d/chamber8'),
-            ('BatteryLab_Tasks', 'Hiacc', 'Hiacc Chamber', 'Room-1', 'https://grafana.com/d/hiacc'),
-            ('BatteryLab_Tasks', 'EA-1', 'EA Cycler #1', 'Room-1', 'https://grafana.com/d/eacycler1'),
-            ('BatteryLab_Tasks', 'EA-2', 'EA Cycler #2', 'Room-1', 'https://grafana.com/d/eacycler2'),
-            ('BatteryLab_Tasks', 'ITECH-Cycler', 'ITECH Cycler', 'Room-1', 'https://grafana.com/d/itech'),
-            ('BatteryLab_Tasks', 'Neware-4Ch', 'Neware 4-Ch', 'Room-1', 'https://grafana.com/d/neware'),
-            ('BatteryLab_Tasks', 'Air-Leak', 'Air Leak Tester', 'Room-2', 'https://grafana.com/d/airleak'),
-            ('BatteryLab_Tasks', '4-Channel', '4-Channel Bench', 'Room-2', 'https://grafana.com/d/4channel')
+            ('BatteryLab_Tasks', 'Chamber-1', 'Envisys ET-600 Chamber-1', 'Chamber', 'Room-1', 'https://grafana.com/d/et600-ch1'),
+            ('BatteryLab_Tasks', 'Chamber-3', 'Envisys ET-600 Chamber-3', 'Chamber', 'Room-1', 'https://grafana.com/d/et600-ch3'),
+            ('BatteryLab_Tasks', 'Chamber-4', 'Envisys ET-600 Chamber-4', 'Chamber', 'Room-1', 'https://grafana.com/d/et600-ch4'),
+            ('BatteryLab_Tasks', 'EA-1', 'EA Cycler #1', 'Cycler', 'Room-1', 'https://grafana.com/d/eacycler1'),
+            ('BatteryLab_Tasks', 'EA-2', 'EA Cycler #2', 'Cycler', 'Room-1', 'https://grafana.com/d/eacycler2'),
+            ('BatteryLab_Tasks', 'ITECH-Cycler', 'ITECH Cycler', 'Cycler', 'Room-1', 'https://grafana.com/d/itech'),
+            ('BatteryLab_Tasks', 'Channel-1', 'Bench Channel 1', 'Channel', 'Room-2', 'https://grafana.com/d/ch1'),
+            ('BatteryLab_Tasks', 'Channel-2', 'Bench Channel 2', 'Channel', 'Room-2', 'https://grafana.com/d/ch2'),
+            ('BatteryLab_Tasks', 'Channel-3', 'Bench Channel 3', 'Channel', 'Room-2', 'https://grafana.com/d/ch3'),
+            ('BatteryLab_Tasks', 'Channel-4', 'Bench Channel 4', 'Channel', 'Room-2', 'https://grafana.com/d/ch4')
         ]
-        c.executemany("INSERT INTO equipment_stations (lab_name, station_code, display_name, room_zone, grafana_url) VALUES (?, ?, ?, ?, ?)", station_seeds)
+        c.executemany("INSERT INTO equipment_stations (lab_name, station_code, display_name, station_type, room_zone, grafana_url) VALUES (?, ?, ?, ?, ?, ?)", station_seeds)
 
     # Seed Associates
     c.execute("SELECT COUNT(*) FROM associates_master")
