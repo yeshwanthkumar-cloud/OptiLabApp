@@ -12,7 +12,7 @@ def index():
     return render_template('index.html')
 
 # -----------------------------------------------------------------------------
-# GET TASKS & SCHEMATIC DATA
+# GET TASKS (ISOLATED PER LAB)
 # -----------------------------------------------------------------------------
 @app.route('/api/tasks/<lab_name>')
 def get_tasks(lab_name):
@@ -44,37 +44,37 @@ def create_task():
     category = data.get('category', '450 Pack')
     trf_id = data.get('trf_id', '-')
     priority = data.get('priority', 'P2')
-    sprint_id = data.get('sprint_id', '27.2.1')
-    target_shift = data.get('target_shift', 'Shift A')
-    assign_date = data.get('assign_date', datetime.now().strftime('%Y-%m-%d'))
+    sprint_id = data.get('sprint_id', 'Sprint 27.2.1')
+    lead_engineer = data.get('lead_engineer', 'Raj Kumar')
+    target_shift = data.get('target_shift', 'Unassigned')
+    assign_date = data.get('start_date', datetime.now().strftime('%Y-%m-%d'))
     background = data.get('background', '')
     target_end_date = data.get('target_end_date', '2026-11-01')
-    selected_flow = data.get('flow_name', 'CUSTOM')
+    steps_list = data.get('steps', [])
 
     conn = get_connection()
     c = conn.cursor()
     master_id = f"TSK-{datetime.now().strftime('%H%M%S')}"
     
+    # Save Master Task
     c.execute("""
         INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         master_id, "", lab_name, bin_pack, dvp_name, category, trf_id, priority, sprint_id,
-        "Raj Kumar", "Unassigned", "Unassigned", target_shift, assign_date, 0, 0, "Steps", "Unassigned", "Unassigned", "0%",
+        lead_engineer, "Unassigned", "Unassigned", target_shift, assign_date, 0, 0, "Steps", "Unassigned", "Unassigned", "0%",
         "Running", background, f"[Objective]: {dvp_name}", target_end_date
     ))
 
-    if selected_flow != 'CUSTOM':
-        c.execute("SELECT step_order, step_name FROM custom_flows WHERE lab_name = ? AND flow_name = ? ORDER BY step_order", (lab_name, selected_flow))
-        flow_steps = c.fetchall()
-        for step_order, step_name in flow_steps:
-            sub_id = f"SUB-{master_id.replace('TSK-','')}-{step_order}"
-            c.execute("""
-                INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                sub_id, master_id, lab_name, bin_pack, f"{step_order}. {step_name}", category, trf_id, priority, sprint_id,
-                "Raj Kumar", "Unassigned", "Unassigned", target_shift, assign_date, 10, 0, "Hours", "Chamber-1", "EA Cycler #1", "0%",
-                "To Do", background, "", target_end_date
-            ))
+    # Save Generated Subtask Steps with Custom Targets & Units
+    for idx, step in enumerate(steps_list):
+        sub_id = f"SUB-{master_id.replace('TSK-','')}-{idx+1}"
+        c.execute("""
+            INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            sub_id, master_id, lab_name, bin_pack, f"{idx+1}. {step.get('name')}", category, trf_id, priority, sprint_id,
+            lead_engineer, "Unassigned", "Unassigned", target_shift, assign_date, int(step.get('target', 10)), 0, step.get('unit', 'Hours'), "Chamber-1", "EA Cycler #1", "0%",
+            "To Do", background, "", target_end_date
+        ))
 
     conn.commit()
     conn.close()
@@ -279,7 +279,7 @@ def add_extra_task():
     c.execute("""
         INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        task_id, "EXTRA", lab_name, "AD-HOC", dvp_name, "Ad-Hoc Task", "-", "P2", "27.2.1",
+        task_id, "EXTRA", lab_name, "AD-HOC", dvp_name, "Ad-Hoc Task", "-", "P2", "Sprint 27.2.1",
         "Floor Eng", incharge, "Unassigned", target_shift, assign_date, 1, 0, "Hours", "Chamber-1", "EA Cycler #1", "0%",
         "To Do", "Extra task added during shift", "", assign_date
     ))
