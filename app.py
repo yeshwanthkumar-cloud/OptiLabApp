@@ -1,241 +1,1077 @@
-from flask import Flask, render_template, request, jsonify
-import sqlite3
-from datetime import datetime
-from database import init_db, get_connection
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 text-slate-800">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E&E Opti Lab Governance Platform</title>
+  
+  <!-- Tailwind CSS Framework & Chart.js Engine -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Plus Jakarta Sans Font Family -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       ENTERPRISE DARWINBOX CLASSIC THEME & CUSTOM STYLES
+       ========================================================================== */
+    :root {
+      --primary-slate: #0f172a;
+      --accent-blue: #2563eb;
+      --accent-indigo: #4f46e5;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+    }
 
-app = Flask(__name__, template_folder='.')
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
 
-init_db()
+    /* Classic Darwinbox White Card Style */
+    .dw-card {
+      background: var(--card-bg);
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+    .dw-card:hover {
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    }
 
-@app.route('/api/tasks/<lab_name>')
-def get_tasks(lab_name):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM master_tasks WHERE lab_name = ? ORDER BY CASE priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 ELSE 3 END, task_id", (lab_name,))
-    rows = c.fetchall()
-    conn.close()
+    /* SCADA EQUIPMENT TILE DESIGN */
+    .scada-tile {
+      border-radius: 16px;
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .scada-tile:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.12);
+      border-color: #2563eb;
+    }
+
+    .status-running { border-color: #22c55e !important; background: #f0fdf4 !important; }
+    .status-blocked { border-color: #ef4444 !important; background: #fef2f2 !important; }
+    .status-idle { border-color: #cbd5e1 !important; background: #ffffff !important; }
+
+    /* ROSTER MATRIX SHIFT CELL COLOR BADGES */
+    .rst-cell {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s ease-in-out;
+    }
+
+    .rst-cell:hover { transform: scale(1.18); z-index: 10; }
+    .rst-cell-A { background-color: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .rst-cell-B { background-color: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .rst-cell-C { background-color: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+    .rst-cell-O { background-color: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+    .rst-cell-V { background-color: #fef9c3; color: #a16207; border: 1px solid #fde047; }
+    .rst-cell-H { background-color: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+    .rst-cell-S { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+    /* CLASSIC LEFT ICON NAVIGATION HIGHLIGHT */
+    .nav-tab.active {
+      background-color: rgba(37, 99, 235, 0.2);
+      color: #2563eb;
+      font-weight: 800;
+      border: 1px solid rgba(37, 99, 235, 0.4);
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  </style>
+</head>
+<body class="h-full flex overflow-hidden bg-slate-50 text-slate-800">
+
+  <!-- ==================================================================== -->
+  <!-- SCREEN 1: LANDING CONSOLE SELECTOR                                   -->
+  <!-- ==================================================================== -->
+  <div id="screen-landing" class="h-full w-full flex flex-col items-center justify-center p-6 space-y-10 bg-slate-50 text-slate-900 z-50 fixed inset-0">
+    <div class="text-center space-y-3">
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-blue-600 text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-blue-500/20">⚡</div>
+      <h1 class="text-4xl md:text-5xl font-black tracking-tight text-slate-900">E&E Opti Lab</h1>
+      <p class="text-xs font-extrabold uppercase text-slate-400 tracking-widest">Select Department Console Environment</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl w-full px-4">
+      <button onclick="enterDepartment('BatteryLab_Tasks', 'BATTERY LAB')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">🔋</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">BATTERY LAB</span>
+      </button>
+
+      <button onclick="enterDepartment('CellLab_Tasks', 'CELL LAB')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">🧪</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">CELL LAB</span>
+      </button>
+
+      <button onclick="enterDepartment('Vibration_Tasks', 'VIBRATION TEAM')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚡</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">VIBRATION TEAM</span>
+      </button>
+
+      <button onclick="enterDepartment('EELab_Tasks', 'E&E LAB')" class="dw-card p-8 flex flex-col items-center justify-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚙️</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">E&E LAB</span>
+      </button>
+    </div>
+
+    <div class="text-center text-xs font-bold text-slate-400">
+      E&E Opti Lab Operations & Testing Governance Platform
+    </div>
+  </div>
+
+
+  <!-- ==================================================================== -->
+  <!-- SCREEN 2: MAIN CLASSIC CONSOLE APPLICATION                           -->
+  <!-- ==================================================================== -->
+  <div id="screen-console" class="hidden h-full w-full flex overflow-hidden">
     
-    tasks = []
-    for r in rows:
-        tasks.append({
-            "task_id": r[0], "parent_id": r[1], "lab_name": r[2], "bin_pack": r[3],
-            "dvp_name": r[4], "category": r[5], "trf_id": r[6], "priority": r[7],
-            "sprint_id": r[8], "lead_engineer": r[9], "shift_incharge": r[10],
-            "assigned_associate": r[11], "target_shift": r[12], "assign_date": r[13],
-            "target_units": r[14], "completed_units": r[15], "unit_type": r[16],
-            "chamber_id": r[17], "cycler_id": r[18], "slot_id": r[19] if len(r) > 19 else 'Slot A',
-            "progress_percent": r[20] if len(r) > 20 else '0%',
-            "status": r[21] if len(r) > 21 else 'To Do',
-            "background": r[22] if len(r) > 22 else '',
-            "observations": r[23] if len(r) > 23 else '',
-            "target_end_date": r[24] if len(r) > 24 else '2026-11-01',
-            "stoppage_reason": r[25] if len(r) > 25 else ''
+    <!-- LEFT ICON SIDEBAR NAVIGATION -->
+    <aside class="w-16 md:w-20 bg-slate-900 text-white flex flex-col items-center py-6 gap-8 shrink-0 z-20 shadow-2xl">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/30">⚡</div>
+      
+      <nav class="flex-1 flex flex-col items-center gap-5 w-full px-2">
+        <button onclick="switchView('mod-workbench')" id="snav-mod-workbench" title="Shift Workbench" class="nav-tab w-12 h-12 rounded-2xl active flex items-center justify-center text-xl transition hover:bg-blue-600 hover:text-white">☀️</button>
+        <button onclick="switchView('mod-observation')" id="snav-mod-observation" title="SCADA Floor Map Twin" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">🗺️</button>
+        <button onclick="switchView('mod-roster')" id="snav-mod-roster" title="Shift Rotation Matrix Roster" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📅</button>
+        <button onclick="switchView('mod-exec-dashboard')" id="snav-mod-exec-dashboard" title="Executive DVP Matrix" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📊</button>
+        <button onclick="switchView('mod-planner')" id="snav-mod-planner" title="Task Planner & Component Masters" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📋</button>
+        <button onclick="switchView('mod-history')" id="snav-mod-history" title="Audit History Log" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📜</button>
+        <button onclick="switchView('mod-analytics')" id="snav-mod-analytics" title="Shift Efficiency Analytics" class="nav-tab w-12 h-12 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white flex items-center justify-center text-xl transition">📈</button>
+      </nav>
+
+      <button onclick="openGuideModal()" title="Help & Guide Manual" class="w-10 h-10 rounded-xl bg-purple-900/60 text-purple-300 flex items-center justify-center text-xs font-bold border border-purple-700">❓ Guide</button>
+      <button onclick="exitToLanding()" title="Switch Department" class="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition border border-slate-700">➔</button>
+    </aside>
+
+    <!-- MAIN RIGHT WORKSPACE AREA -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="h-16 bg-white border-b border-slate-200/80 px-8 flex items-center justify-between shrink-0 z-10">
+        <div class="flex items-center gap-6">
+          <h1 class="font-black text-lg tracking-tight text-slate-900" id="lbl-dept-title">E&E Opti Lab</h1>
+          
+          <div class="hidden sm:flex items-center bg-slate-100 rounded-2xl px-4 py-2 text-xs text-slate-500 w-72 border border-slate-200/60">
+            <span class="mr-2">🔍</span>
+            <input type="text" id="inp-global-search" onkeyup="handleGlobalSearch(this.value)" placeholder="Search packs, TRF, or components..." class="bg-transparent border-none focus:outline-none w-full font-medium text-slate-800">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <select id="sel-dept-picker" onchange="enterDepartment(this.value, this.options[this.selectedIndex].text)" class="bg-slate-100 border-none font-extrabold text-xs px-3.5 py-2 rounded-xl text-slate-700 focus:outline-none">
+            <option value="BatteryLab_Tasks">Battery Lab</option>
+            <option value="CellLab_Tasks">Cell Lab</option>
+            <option value="Vibration_Tasks">Vibration Team</option>
+            <option value="EELab_Tasks">E&E Lab</option>
+          </select>
+
+          <button onclick="openGuideModal()" class="bg-blue-50 text-blue-700 font-extrabold text-xs px-3.5 py-2 rounded-xl border border-blue-100 flex items-center gap-1.5">
+            📖 User Guide
+          </button>
+        </div>
+      </header>
+
+      <!-- SCROLLABLE MODULE BODY -->
+      <main class="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto space-y-6">
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 1: SHIFT WORKBENCH & OPERATIONS                               -->
+        <!-- ==================================================================== -->
+        <section id="mod-workbench" class="space-y-6">
+          <div class="dw-card p-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">👤</div>
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift Attendance Desk</span>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <h3 class="text-sm font-extrabold text-slate-900">Operator Clock-In Desk</h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <select id="sel-shift-filter" onchange="renderKanban()" class="bg-slate-100 border-none font-bold text-xs p-3 rounded-2xl text-slate-800 focus:outline-none">
+                <option value="Shift A">Shift A (06:00 - 14:00)</option>
+                <option value="Shift B">Shift B (14:00 - 22:00)</option>
+                <option value="Shift C">Shift C (22:00 - 06:00)</option>
+              </select>
+
+              <select id="sel-punch-operator" class="bg-slate-100 border-none font-bold text-xs p-3 rounded-2xl text-slate-800 focus:outline-none"></select>
+
+              <button onclick="alert('✅ Operator Clocked In!')" class="bg-emerald-600 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-md hover:bg-emerald-700 transition flex items-center gap-1.5">
+                <span>⏰</span> CLOCK IN
+              </button>
+
+              <button onclick="open5SModal()" class="bg-amber-500 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-md hover:bg-amber-600 transition flex items-center gap-1.5">
+                <span>📋</span> 5S HANDOVER
+              </button>
+
+              <button onclick="openExtraTaskModal()" class="bg-purple-600 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-md hover:bg-purple-700 transition flex items-center gap-1.5">
+                <span>➕</span> EXTRA TASK
+              </button>
+            </div>
+          </div>
+
+          <div class="dw-card p-4 flex items-center gap-3 bg-white">
+            <span class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1 shrink-0">
+              <span>📝</span> SHIFT NOTE:
+            </span>
+            <input type="text" id="inp-shift-note-msg" placeholder="Type a note or alert for your shift or handover team..." class="flex-1 bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-xs p-3 rounded-xl focus:outline-none">
+            <button onclick="submitShiftNote()" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-6 py-3 rounded-xl shadow-md transition shrink-0">
+              SUBMIT NOTE ➔
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-3">
+              <span class="font-extrabold text-xs text-slate-500 uppercase tracking-wider">To Do</span>
+              <div id="col-todo" class="space-y-3 min-h-[350px]"></div>
+            </div>
+
+            <div class="space-y-3">
+              <span class="font-extrabold text-xs text-emerald-600 uppercase tracking-wider">In Progress 🟢</span>
+              <div id="col-running" class="space-y-3 min-h-[350px]"></div>
+            </div>
+
+            <div class="space-y-3">
+              <span class="font-extrabold text-xs text-rose-600 uppercase tracking-wider">Blocked / Stoppage 🛑</span>
+              <div id="col-blocked" class="space-y-3 min-h-[350px]"></div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 2: SCADA FLOOR MAP TWIN (ROOM-1 & ROOM-2)                     -->
+        <!-- ==================================================================== -->
+        <section id="mod-observation" class="hidden space-y-6">
+          <div class="dw-card p-6 space-y-6">
+            <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-4 gap-4">
+              <div>
+                <h3 class="text-sm font-black text-slate-900 uppercase">Envisys ET-600 SCADA Floor Layout Twin</h3>
+                <p class="text-xs font-semibold text-slate-400 mt-0.5">Click station tiles to view multi-pack telemetry or add custom blocks.</p>
+              </div>
+
+              <button onclick="openAddStationModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5">
+                <span>➕</span> Add Equipment Station Block
+              </button>
+            </div>
+
+            <div class="space-y-6">
+              <div class="space-y-2">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Room-1 Primary Envisys Bay</span>
+                <div id="container-room1-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+              </div>
+
+              <div class="w-full bg-slate-900 text-emerald-400 font-mono text-xs font-black py-3 rounded-2xl text-center tracking-widest uppercase shadow-inner">
+                ─── MAIN LAB WALKWAY & LOGISTICS PASSAGE ───
+              </div>
+
+              <div class="space-y-2">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Room-2 Secondary Testing Bay</span>
+                <div id="container-room2-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 3: SHIFT ROSTER MATRIX & ASSOCIATE DESK                       -->
+        <!-- ==================================================================== -->
+        <section id="mod-roster" class="hidden space-y-6">
+          <div class="dw-card p-6 flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-blue-600">
+            <div>
+              <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">👤 Add New Associate to Shift Roster</h3>
+              <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Register technicians or incharges directly to the rotation grid.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 text-xs">
+              <input type="text" id="inp-assoc-name" placeholder="Full Name (e.g. Riyaz)" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl font-bold w-48">
+              <select id="inp-assoc-role" class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl font-bold">
+                <option value="Technician">Technician</option>
+                <option value="Shift Incharge">Shift Incharge</option>
+              </select>
+              <button onclick="registerAssociateWithId()" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2.5 rounded-xl shadow-md transition">
+                Add Associate ➔
+              </button>
+            </div>
+          </div>
+
+          <div class="dw-card p-6 space-y-6">
+            <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-4 gap-4">
+              <div>
+                <h2 class="text-base font-black text-slate-900">Staff Rotation Schedule Matrix</h2>
+                <div class="flex items-center gap-3 mt-1">
+                  <span class="text-xs font-extrabold text-slate-500">Active Month:</span>
+                  <select id="sel-roster-month" onchange="fetchRosterMatrix()" class="bg-slate-100 border-none font-bold text-xs px-3 py-1.5 rounded-xl text-slate-800">
+                    <option value="2026-09">September 2026</option>
+                    <option value="2026-10">October 2026</option>
+                    <option value="2026-11">November 2026</option>
+                  </select>
+                </div>
+              </div>
+
+              <button onclick="cloneScheduleToNextMonth()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">📋 Clone to Next Month</button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse min-w-[1100px]">
+                <thead>
+                  <tr class="bg-slate-900 text-white text-[10px] font-black uppercase">
+                    <th class="p-3 rounded-l-xl w-24">Emp ID</th>
+                    <th class="p-3 w-36">Name</th>
+                    <script>for(let d=1; d<=31; d++){ document.write(`<th class="p-1 text-center w-7">${d}</th>`); }</script>
+                    <th class="p-3 rounded-r-xl w-28 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tbl-roster-matrix-body" class="divide-y divide-slate-100 font-bold text-slate-800"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 4: EXECUTIVE DVP MATRIX                                       -->
+        <!-- ==================================================================== -->
+        <section id="mod-exec-dashboard" class="hidden space-y-6">
+          <div class="dw-card p-6 overflow-hidden space-y-4">
+            <h3 class="text-sm font-black text-slate-900 uppercase">Master DVP Execution Matrix</h3>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[10px]">
+                <tr>
+                  <th class="p-3">TASK ID</th>
+                  <th class="p-3">PRIO</th>
+                  <th class="p-3">BIN NO.</th>
+                  <th class="p-3">DVP TEST NAME</th>
+                  <th class="p-3">PROGRESS</th>
+                  <th class="p-3">STATUS</th>
+                  <th class="p-3 text-center">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-master-exec-body" class="divide-y divide-slate-100 font-semibold"></tbody>
+            </table>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 5: TASK PLANNER, FLOW CREATOR & COMPONENT MASTERS             -->
+        <!-- ==================================================================== -->
+        <section id="mod-planner" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+              
+              <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-6 text-xs">
+                
+                <!-- SECTION 1 -->
+                <div class="dw-card p-6 space-y-4">
+                  <h3 class="text-xs font-black text-slate-900 uppercase border-b border-slate-100 pb-2">1. Basic Task Identification & Component</h3>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block font-bold text-slate-500 mb-1">BIN / Serial No. *</label><input type="text" id="inp-bin" required placeholder="e.g. 450-9702" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+                    <div><label class="block font-bold text-slate-500 mb-1">TRF Reference ID</label><input type="text" id="inp-trf" placeholder="e.g. TRF-2026-081" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+                    <div><label class="block font-bold text-slate-500 mb-1">DVP Test Name *</label><input type="text" id="inp-dvp" required placeholder="e.g. TL-1" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block font-bold text-slate-500 mb-1">Tested Component Category *</label><select id="inp-category" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></select></div>
+                    <div>
+                      <label class="block font-bold text-slate-500 mb-1">Priority *</label>
+                      <select id="inp-priority" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold">
+                        <option value="P1">P1 - Critical</option>
+                        <option value="P2">P2 - High</option>
+                        <option value="P3">P3 - Medium</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 2 -->
+                <div class="dw-card p-6 space-y-4">
+                  <h3 class="text-xs font-black text-slate-900 uppercase border-b border-slate-100 pb-2">2. Master Test Blueprint, Objective & Background</h3>
+                  <div>
+                    <label class="block font-bold text-slate-500 mb-1">SELECT PROFILE BLUEPRINT *</label>
+                    <select id="inp-blueprint" onchange="loadBlueprintSteps()" class="w-full bg-slate-50 border-none text-blue-600 font-extrabold p-3 rounded-xl">
+                      <option value="CUSTOM">Custom Single Step</option>
+                    </select>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block font-bold text-slate-500 mb-1">TEST OBJECTIVE *</label><textarea id="inp-objective" required rows="3" placeholder="e.g. Evaluate battery pack performance under thermal cycling" class="w-full bg-slate-50 border-none p-3 rounded-xl font-medium"></textarea></div>
+                    <div><label class="block font-bold text-slate-500 mb-1">BACKGROUND / JUSTIFICATION</label><textarea id="inp-background" rows="3" placeholder="e.g. STB 450 Gen 2 validation run" class="w-full bg-slate-50 border-none p-3 rounded-xl font-medium"></textarea></div>
+                  </div>
+
+                  <div class="bg-purple-50/50 border border-purple-100 rounded-2xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                      <span class="text-[11px] font-black text-purple-900 uppercase block">📋 GENERATED STEPS TARGET BUILDER:</span>
+                      <button type="button" onclick="addGeneratedStepRow()" class="bg-purple-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg">+ Add Step Row</button>
+                    </div>
+                    <div id="list-generated-steps" class="space-y-2"></div>
+                  </div>
+                </div>
+
+                <!-- SECTION 3 -->
+                <div class="dw-card p-6 space-y-4">
+                  <h3 class="text-xs font-black text-slate-900 uppercase border-b border-slate-100 pb-2">3. Ownership, Target Shift & PIN</h3>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block font-bold text-slate-500 mb-1">LEAD ENGINEER OWNER *</label><input type="text" id="inp-lead-eng" required value="Raj Kumar" placeholder="e.g. Yeshwanth" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+                    <div>
+                      <label class="block font-bold text-slate-500 mb-1">TARGET INITIAL SHIFT *</label>
+                      <select id="inp-target-shift" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold">
+                        <option value="Unassigned">None / Unassigned (Draft Matrix)</option>
+                        <option value="Shift A">Shift A</option>
+                        <option value="Shift B">Shift B</option>
+                        <option value="Shift C">Shift C</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block font-bold text-slate-500 mb-1">TARGET SPRINT ALLOCATION *</label><input type="text" id="inp-sprint-id" required value="Sprint 27.2.1" class="w-full bg-slate-50 border-none p-3 rounded-xl font-extrabold"></div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3">
+                      <label class="block text-blue-900 font-black mb-1">🔒 MANAGER PIN * (1234)</label>
+                      <input type="password" id="inp-pin" required placeholder="Enter PIN..." class="w-full bg-white border border-blue-200 p-2 rounded-xl font-bold">
+                    </div>
+                  </div>
+
+                  <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg transition">
+                    💾 GENERATE TASK BLUEPRINT ➔
+                  </button>
+                </div>
+
+              </form>
+            </div>
+
+            <!-- RIGHT PANEL: TASK FLOW CREATOR & COMPONENT REGISTRATION -->
+            <div class="space-y-6">
+              
+              <div class="dw-card p-5 space-y-4 border-l-4 border-l-purple-600 shadow-sm">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">🛠️ Task Flow Creator</h3>
+                <p class="text-[10px] font-semibold text-slate-400">Save multi-step blueprint templates that automatically populate step targets in the dropdown above.</p>
+                <div class="space-y-2 text-xs">
+                  <input type="text" id="flow-name-inp" placeholder="Flow Name (e.g. TL-1 Profile)" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl font-bold">
+                  <div id="flow-steps-container" class="space-y-2">
+                    <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 p-2 rounded-lg" placeholder="1. Pre-Capacity Check">
+                    <input type="text" class="flow-step-item w-full bg-slate-50 border border-slate-200 p-2 rounded-lg" placeholder="2. Pre-Aging Chamber Soak">
+                  </div>
+                  <div class="flex gap-2 pt-2">
+                    <button onclick="addFlowStepInput()" type="button" class="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs">+ Step</button>
+                    <button onclick="saveCustomFlow()" type="button" class="flex-1 bg-purple-600 text-white font-bold py-2 rounded-xl text-xs">Save Flow Blueprint</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dw-card p-6 space-y-4 border-l-4 border-l-emerald-600">
+                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">➕ Register Tested Component Category</h3>
+                <p class="text-[10px] font-semibold text-slate-400">Add custom tested component types for this active lab environment.</p>
+                <div class="space-y-3 text-xs">
+                  <input type="text" id="inp-comp-name" placeholder="e.g. NMC 2170 Cell, BMS Harness" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl font-bold">
+                  <button onclick="registerComponent()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl shadow-md transition">
+                    Add Component Category ➔
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 6: AUDIT HISTORY LOG                                          -->
+        <!-- ==================================================================== -->
+        <section id="mod-history" class="hidden space-y-6">
+          <div class="dw-card p-6 space-y-4">
+            <h3 class="text-sm font-black text-slate-900 uppercase">📜 Task Execution & Audit Log</h3>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-400 font-black uppercase text-[10px]">
+                <tr><th class="p-3">Timestamp</th><th class="p-3">Task ID</th><th class="p-3">Operator</th><th class="p-3">Shift</th><th class="p-3">Action</th><th class="p-3">Findings</th></tr>
+              </thead>
+              <tbody id="tbl-history-body" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================== -->
+        <!-- MODULE 7: SHIFT EFFICIENCY & STOPPAGE ANALYTICS                     -->
+        <!-- ==================================================================== -->
+        <section id="mod-analytics" class="hidden space-y-6">
+          <div class="dw-card p-6 space-y-4">
+            <h3 class="text-sm font-black text-slate-900 uppercase">📊 Shift Efficiency & 3M Stoppage Analytics</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center space-y-2">
+                <span class="text-xs font-black uppercase block">Tasks Completed Per Shift</span>
+                <div class="h-64 flex items-center justify-center"><canvas id="chartShiftComparison"></canvas></div>
+              </div>
+              <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center space-y-2">
+                <span class="text-xs font-black uppercase block">3M Stoppage Reason Breakdown</span>
+                <div class="h-64 flex items-center justify-center"><canvas id="chartStoppage"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+
+  <!-- MODALS -->
+  <div id="modal-add-station" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-sm text-slate-900">➕ Add Custom Equipment Block</h3>
+        <button onclick="closeAddStationModal()" class="text-slate-400 font-bold text-lg">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div><label class="block font-bold text-slate-500 mb-1">Station Code ID *</label><input type="text" id="pop-st-code" placeholder="e.g. Chamber-12" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Display Name *</label><input type="text" id="pop-st-name" placeholder="e.g. Envisys ET-600 #12" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Type *</label><select id="pop-st-type" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"><option value="Chamber">Chamber (Envisys ET-600)</option><option value="Cycler">Cycler Rack</option><option value="Channel">Bench Channel</option></select></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Room / Zone *</label><select id="pop-st-zone" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"><option value="Room-1">Room-1 Primary</option><option value="Room-2">Room-2 Secondary</option></select></div>
+        <div><label class="block font-bold text-slate-500 mb-1">Custom Grafana Telemetry Dashboard URL *</label><input type="text" id="pop-st-grafana" value="https://grafana.com" class="w-full bg-slate-50 border-none p-3 rounded-xl font-bold"></div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button onclick="closeAddStationModal()" class="bg-slate-100 text-slate-600 font-bold px-4 py-2.5 rounded-xl text-xs">Cancel</button>
+        <button onclick="submitAddStation()" class="bg-purple-600 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md">Add Station ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-grafana" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-xl w-full space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-extrabold text-sm text-slate-900" id="lbl-grafana-station">Envisys ET-600 Chamber Telemetry</h3>
+          <p class="text-xs font-bold text-emerald-600 mt-0.5">Multi-Pack Active Stream (Up to 3 Packs)</p>
+        </div>
+        <button onclick="closeGrafanaModal()" class="text-slate-400 font-bold text-lg">&times;</button>
+      </div>
+
+      <div id="container-multi-pack-cards" class="space-y-3"></div>
+
+      <div class="flex justify-end pt-2 border-t border-slate-100">
+        <button onclick="closeGrafanaModal()" class="bg-slate-100 text-slate-600 font-bold px-5 py-2.5 rounded-xl text-xs">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT CONTROLLER LOGIC -->
+  <script>
+    let curLab = "BatteryLab_Tasks";
+    let globalTasks = [];
+    let labStations = [];
+    let rosterDataCache = [];
+    let customFlowsCache = {};
+
+    let activeBlueprintSteps = [
+      { name: '1. Pre-Test Inspection', unit: 'Hours', target: 1 },
+      { name: '2. Pre-Capacity Soak', unit: 'Hours', target: 2 },
+      { name: '3. Aging Chamber Soak', unit: 'Hours', target: 12 },
+      { name: '4. Cycling Profile Run', unit: 'Cycles', target: 100 }
+    ];
+
+    function enterDepartment(labName, deptTitle) {
+      curLab = labName;
+      document.getElementById('lbl-dept-title').innerText = "E&E OPTI LAB";
+      document.getElementById('screen-landing').classList.add('hidden');
+      document.getElementById('screen-console').classList.remove('hidden');
+      
+      switchView('mod-workbench');
+      fetchMasters();
+      fetchTasks();
+      fetchStations();
+      fetchRosterMatrix();
+      renderGeneratedSteps();
+    }
+
+    function switchView(modId) {
+      ['mod-workbench', 'mod-observation', 'mod-roster', 'mod-exec-dashboard', 'mod-planner', 'mod-history', 'mod-analytics'].forEach(m => {
+        const el = document.getElementById(m);
+        if (el) el.classList.add('hidden');
+      });
+
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('snav-' + modId);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const target = document.getElementById(modId);
+      if (target) target.classList.remove('hidden');
+
+      if (modId === 'mod-exec-dashboard') renderExecDashboard();
+      if (modId === 'mod-roster') fetchRosterMatrix();
+      if (modId === 'mod-analytics') renderAnalyticsCharts();
+    }
+
+    function fetchMasters() {
+      fetch('/api/get_masters/' + curLab).then(res => res.json()).then(data => {
+        const compSel = document.getElementById('inp-category');
+        if (compSel) {
+          compSel.innerHTML = "";
+          data.components.forEach(c => compSel.innerHTML += `<option value="${c}">${c}</option>`);
+        }
+
+        const assocSel = document.getElementById('sel-punch-operator');
+        if (assocSel) {
+          assocSel.innerHTML = "";
+          data.associates.forEach(a => assocSel.innerHTML += `<option value="${a}">${a}</option>`);
+        }
+      });
+
+      fetchFlows();
+    }
+
+    function fetchTasks() {
+      fetch('/api/tasks/' + curLab).then(res => res.json()).then(data => {
+        globalTasks = data;
+        renderKanban();
+        renderSCADAGrid();
+        renderExecDashboard();
+      });
+    }
+
+    function fetchStations() {
+      fetch('/api/get_stations/' + curLab).then(res => res.json()).then(data => {
+        labStations = data;
+        renderSCADAGrid();
+      });
+    }
+
+    function renderSCADAGrid() {
+      const room1 = document.getElementById('container-room1-grid');
+      const room2 = document.getElementById('container-room2-grid');
+      if (!room1 || !room2) return;
+
+      room1.innerHTML = ""; room2.innerHTML = "";
+
+      if (labStations.length === 0) {
+        labStations = [
+          { station_code: 'Chamber-1', display_name: 'Envisys ET-600 #1', station_type: 'Chamber', room_zone: 'Room-1', grafana_url: 'https://grafana.com' },
+          { station_code: 'Chamber-3', display_name: 'Envisys ET-600 #3', station_type: 'Chamber', room_zone: 'Room-1', grafana_url: 'https://grafana.com' },
+          { station_code: 'EA-1', display_name: 'EA Cycler #1', station_type: 'Cycler', room_zone: 'Room-1', grafana_url: 'https://grafana.com' },
+          { station_code: 'Channel-1', display_name: 'Bench Channel 1', station_type: 'Channel', room_zone: 'Room-2', grafana_url: 'https://grafana.com' }
+        ];
+      }
+
+      labStations.forEach(st => {
+        const activeTasks = globalTasks.filter(t => t.chamber_id === st.station_code || t.cycler_id === st.station_code);
+        const statusClass = activeTasks.length > 0 ? 'status-running shadow-md' : 'status-idle';
+
+        let packInfoHtml = "";
+        if (activeTasks.length > 0) {
+          activeTasks.forEach(t => {
+            packInfoHtml += `<span class="font-mono text-[9px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded block mt-0.5">${t.slot_id || 'Slot A'}: ${t.bin_pack}</span>`;
+          });
+        } else {
+          packInfoHtml = `<span class="font-mono text-[10px] font-extrabold text-slate-400 block mt-1">IDLE</span>`;
+        }
+
+        const isChamber = st.station_type === 'Chamber';
+        const imageSvg = isChamber ? `<div class="text-3xl">🧊</div>` : `<div class="text-2xl">⚡</div>`;
+
+        const tileHtml = `
+          <div onclick="openGrafanaModalStation('${st.station_code}', '${st.grafana_url}')" class="scada-tile dw-card ${statusClass}">
+            ${imageSvg}
+            <span class="text-xs font-black text-slate-800 block mt-1">${st.display_name}</span>
+            ${packInfoHtml}
+          </div>
+        `;
+
+        if (st.room_zone === 'Room-2') room2.innerHTML += tileHtml;
+        else room1.innerHTML += tileHtml;
+      });
+    }
+
+    function openGrafanaModalStation(stationCode, defaultGrafanaUrl) {
+      const activeTasks = globalTasks.filter(t => t.chamber_id === stationCode || t.cycler_id === stationCode);
+      document.getElementById('lbl-grafana-station').innerText = `Station: ${stationCode}`;
+      const container = document.getElementById('container-multi-pack-cards');
+      container.innerHTML = "";
+
+      if (activeTasks.length > 0) {
+        activeTasks.forEach(t => {
+          container.innerHTML += `
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-xs text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${t.slot_id || 'Slot A'} • Pack ${t.bin_pack}</span>
+                <span class="text-[10px] font-bold text-blue-600 font-mono">${t.progress_percent || '0%'}</span>
+              </div>
+              <p class="text-xs font-bold text-slate-800">${t.dvp_name}</p>
+              <a href="${defaultGrafanaUrl}" target="_blank" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] py-2 rounded-xl flex items-center justify-center gap-1.5 transition">
+                <span>📊</span> Open Live Grafana Telemetry (${t.slot_id || 'Slot A'}) ➔
+              </a>
+            </div>
+          `;
+        });
+      } else {
+        container.innerHTML = `
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center space-y-2">
+            <span class="text-xs font-bold text-slate-500 block">Station currently in Standby / Idle</span>
+            <a href="${defaultGrafanaUrl}" target="_blank" class="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] px-4 py-2 rounded-xl transition">
+              📊 Open Station Baseline Grafana ➔
+            </a>
+          </div>
+        `;
+      }
+
+      document.getElementById('modal-grafana').classList.remove('hidden');
+    }
+
+    function submitAddStation() {
+      const code = document.getElementById('pop-st-code').value.trim();
+      const name = document.getElementById('pop-st-name').value.trim();
+      const type = document.getElementById('pop-st-type').value;
+      const zone = document.getElementById('pop-st-zone').value;
+      const url = document.getElementById('pop-st-grafana').value.trim();
+
+      if (!code || !name) return alert("Please enter station code and name.");
+
+      fetch('/api/add_station', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lab_name: curLab, station_code: code, display_name: name, station_type: type, room_zone: zone, grafana_url: url })
+      }).then(() => {
+        closeAddStationModal();
+        alert("✅ Station Added!");
+        fetchStations();
+      });
+    }
+
+    function renderExecDashboard() {
+      const tbody = document.getElementById('tbl-master-exec-body');
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const masterTasks = globalTasks.filter(t => !t.parent_id);
+
+      masterTasks.forEach(m => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50 bg-white">
+            <td class="p-3 font-mono text-blue-600 font-bold">${m.task_id}</td>
+            <td class="p-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold border border-slate-200 text-[10px]">${m.priority}</span></td>
+            <td class="p-3 font-bold text-purple-700">${m.bin_pack}</td>
+            <td class="p-3 font-black text-slate-900">${m.dvp_name}</td>
+            <td class="p-3 font-mono font-bold text-blue-600">${m.progress_percent}</td>
+            <td class="p-3"><span class="${m.status === 'Running' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'} px-2.5 py-0.5 rounded-full font-bold text-[10px]">${m.status}</span></td>
+            <td class="p-3 text-center">
+              <button onclick="openGrafanaModalStation('${m.chamber_id}', 'https://grafana.com')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold p-1.5 rounded-lg text-xs transition">👁️ View</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function fetchRosterMatrix() {
+      const activeMonth = document.getElementById('sel-roster-month').value;
+      fetch(`/api/get_roster_matrix/${curLab}/${activeMonth}`).then(res => res.json()).then(matrix => {
+        rosterDataCache = matrix;
+        renderRosterMatrixDOM();
+      });
+    }
+
+    function renderRosterMatrixDOM() {
+      const tbody = document.getElementById('tbl-roster-matrix-body');
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      
+      let empIdx = 11111;
+      rosterDataCache.forEach((m, rowIdx) => {
+        let cells = "";
+        for(let d=1; d<=31; d++) {
+          const code = m.days[`day_${d}`] || 'A';
+          cells += `<td class="p-1 text-center"><span id="cell-${rowIdx}-${d}" onclick="instantToggleRosterCode(${rowIdx}, '${m.operator_name}', ${d})" class="rst-cell rst-cell-${code}">${code}</span></td>`;
+        }
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-mono font-bold text-slate-400">${empIdx++}</td>
+            <td class="p-3 font-extrabold text-slate-900">${m.operator_name}</td>
+            ${cells}
+            <td class="p-3 text-center flex items-center justify-center gap-2">
+              <button onclick="editAssociateName('${m.operator_name}')" class="text-blue-600 font-bold text-[10px]">✏️ Edit</button>
+              <button onclick="deleteAssociate('${m.operator_name}')" class="text-rose-600 font-bold text-[10px]">🗑️ Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function instantToggleRosterCode(rowIdx, operatorName, dayNum) {
+      const seq = ['A', 'B', 'C', 'O', 'V', 'H', 'S'];
+      const cell = document.getElementById(`cell-${rowIdx}-${dayNum}`);
+      const currentCode = cell.innerText.trim();
+      const nextCode = seq[(seq.indexOf(currentCode) + 1) % seq.length];
+
+      cell.className = `rst-cell rst-cell-${nextCode}`;
+      cell.innerText = nextCode;
+      rosterDataCache[rowIdx].days[`day_${dayNum}`] = nextCode;
+
+      fetch('/api/update_roster_day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lab_name: curLab, operator_name: operatorName, day_num: dayNum,
+          status_code: nextCode, year_month: document.getElementById('sel-roster-month').value
         })
-    return jsonify(tasks)
+      });
+    }
 
-@app.route('/api/get_stations/<lab_name>')
-def get_stations(lab_name):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, station_code, display_name, station_type, room_zone, grafana_url FROM equipment_stations WHERE lab_name = ?", (lab_name,))
-    rows = c.fetchall()
-    conn.close()
-    return jsonify([{"id": r[0], "station_code": r[1], "display_name": r[2], "station_type": r[3], "room_zone": r[4], "grafana_url": r[5]} for r in rows])
+    function registerAssociateWithId() {
+      const name = document.getElementById('inp-assoc-name').value.trim();
+      const role = document.getElementById('inp-assoc-role').value;
+      if (!name) return alert("Please enter associate name.");
 
-@app.route('/api/add_station', methods=['POST'])
-def add_station():
-    data = request.json
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("INSERT INTO equipment_stations (lab_name, station_code, display_name, station_type, room_zone, grafana_url) VALUES (?, ?, ?, ?, ?, ?)",
-              (data.get('lab_name'), data.get('station_code'), data.get('display_name'), data.get('station_type', 'Chamber'), data.get('room_zone', 'Room-1'), data.get('grafana_url', 'https://grafana.com')))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
+      fetch('/api/add_associate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lab_name: curLab, name: name, role: role })
+      }).then(() => {
+        document.getElementById('inp-assoc-name').value = "";
+        alert("✅ Associate Registered!");
+        fetchMasters();
+        fetchRosterMatrix();
+      });
+    }
 
-@app.route('/api/create_task', methods=['POST'])
-def create_task():
-    data = request.json
-    lab_name = data.get('lab_name')
-    bin_pack = data.get('bin_pack')
-    dvp_name = data.get('dvp_name')
-    category = data.get('category', '450 Pack')
-    trf_id = data.get('trf_id', '-')
-    priority = data.get('priority', 'P2')
-    sprint_id = data.get('sprint_id', 'Sprint 27.2.1')
-    lead_engineer = data.get('lead_engineer', 'Raj Kumar')
-    target_shift = data.get('target_shift', 'Unassigned')
-    assign_date = data.get('start_date', datetime.now().strftime('%Y-%m-%d'))
-    background = data.get('background', '')
-    target_end_date = data.get('target_end_date', '2026-11-01')
-    steps_list = data.get('steps', [])
+    function deleteAssociate(operatorName) {
+      if (confirm(`🛑 Are you sure you want to delete ${operatorName}?`)) {
+        fetch('/api/delete_associate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lab_name: curLab, operator_name: operatorName })
+        }).then(() => { fetchRosterMatrix(); fetchMasters(); });
+      }
+    }
 
-    conn = get_connection()
-    c = conn.cursor()
-    master_id = f"TSK-{datetime.now().strftime('%H%M%S')}"
-    
-    c.execute("""
-        INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        master_id, "", lab_name, bin_pack, dvp_name, category, trf_id, priority, sprint_id,
-        lead_engineer, "Unassigned", "Unassigned", target_shift, assign_date, 0, 0, "Steps", "Unassigned", "Unassigned", "Slot A", "0%",
-        "Running", background, f"[Objective]: {dvp_name}", target_end_date, ""
-    ))
+    function editAssociateName(oldName) {
+      const newName = prompt(`Edit Associate Name:`, oldName);
+      if (newName && newName.trim() !== oldName) {
+        fetch('/api/edit_associate_name', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lab_name: curLab, old_name: oldName, new_name: newName.trim() })
+        }).then(() => { fetchRosterMatrix(); fetchMasters(); });
+      }
+    }
 
-    for idx, step in enumerate(steps_list):
-        sub_id = f"SUB-{master_id.replace('TSK-','')}-{idx+1}"
-        c.execute("""
-            INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            sub_id, master_id, lab_name, bin_pack, f"{idx+1}. {step.get('name')}", category, trf_id, priority, sprint_id,
-            lead_engineer, "Unassigned", "Unassigned", target_shift, assign_date, int(step.get('target', 10)), 0, step.get('unit', 'Hours'), "Chamber-1", "EA Cycler #1", "Slot A", "0%",
-            "To Do", background, "", target_end_date, ""
-        ))
+    function cloneScheduleToNextMonth() {
+      const curr = document.getElementById('sel-roster-month').value;
+      const next = curr === '2026-09' ? '2026-10' : '2026-11';
+      fetch('/api/clone_roster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lab_name: curLab, current_month: curr, next_month: next })
+      }).then(() => alert(`✅ Schedule cloned from ${curr} to ${next}!`));
+    }
 
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True, "master_id": master_id})
+    function registerComponent() {
+      const name = document.getElementById('inp-comp-name').value.trim();
+      if (!name) return;
+      fetch('/api/add_component', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lab_name: curLab, name: name })
+      }).then(() => {
+        document.getElementById('inp-comp-name').value = "";
+        alert("✅ Tested Component Category Registered!");
+        fetchMasters();
+      });
+    }
 
-# -----------------------------------------------------------------------------
-# ROSTER APIS (ROBUST & FAST)
-# -----------------------------------------------------------------------------
-@app.route('/api/get_roster_matrix/<lab_name>/<year_month>')
-def get_roster_matrix(lab_name, year_month):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ? AND year_month = ?", (lab_name, year_month))
-    rows = c.fetchall()
-    
-    # If month has no entries, seed automatically from associates master
-    if not rows:
-        c.execute("SELECT associate_name FROM associates_master WHERE lab_name = ?", (lab_name,))
-        assocs = c.fetchall()
-        for a in assocs:
-            c.execute("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)",
-                      (lab_name, a[0], year_month))
-        conn.commit()
-        c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ? AND year_month = ?", (lab_name, year_month))
-        rows = c.fetchall()
+    function renderKanban() {
+      const colTodo = document.getElementById('col-todo');
+      const colRunning = document.getElementById('col-running');
+      const colBlocked = document.getElementById('col-blocked');
 
-    conn.close()
-    
-    matrix = []
-    for r in rows:
-        days_dict = {}
-        for d in range(1, 32):
-            days_dict[f"day_{d}"] = r[d+3] if (d+3) < len(r) else 'A'
-        matrix.append({
-            "id": r[0], "lab_name": r[1], "operator_name": r[2], "year_month": r[3], "days": days_dict
+      colTodo.innerHTML = ""; colRunning.innerHTML = ""; colBlocked.innerHTML = "";
+
+      const selectedShift = document.getElementById('sel-shift-filter').value;
+      const activeSubs = globalTasks.filter(t => t.target_shift === selectedShift || t.status === 'Running' || t.status === 'Blocked');
+
+      activeSubs.forEach(t => {
+        const st = (t.status || 'To Do').toLowerCase();
+        const cardHtml = `
+          <div class="dw-card p-4 space-y-3 transition hover:border-blue-400">
+            <div class="flex justify-between items-center">
+              <span class="font-mono text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">${t.task_id}</span>
+              <span class="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full">${t.bin_pack}</span>
+            </div>
+            <div>
+              <h4 class="text-xs font-black text-slate-900 mt-0.5">${t.dvp_name}</h4>
+              <p class="text-[10px] font-bold text-slate-500 mt-0.5">Station: ${t.chamber_id || 'Chamber-1'}</p>
+            </div>
+          </div>
+        `;
+        if (st.includes('running')) colRunning.innerHTML += cardHtml;
+        else if (st.includes('block')) colBlocked.innerHTML += cardHtml;
+        else colTodo.innerHTML += cardHtml;
+      });
+    }
+
+    function renderAnalyticsCharts() {
+      const ctxShift = document.getElementById('chartShiftComparison')?.getContext('2d');
+      if (ctxShift) {
+        new Chart(ctxShift, {
+          type: 'bar',
+          data: { labels: ['Shift A', 'Shift B', 'Shift C'], datasets: [{ label: 'Tasks Completed', data: [33, 47, 23], backgroundColor: '#2563eb' }] },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      const ctxStop = document.getElementById('chartStoppage')?.getContext('2d');
+      if (ctxStop) {
+        new Chart(ctxStop, {
+          type: 'doughnut',
+          data: { labels: ['No Parts', 'Chamber Down', 'Fixture Adjust'], datasets: [{ data: [50, 30, 20], backgroundColor: ['#ef4444', '#2563eb', '#a855f7'] }] },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+    }
+
+    function renderGeneratedSteps() {
+      const container = document.getElementById('list-generated-steps');
+      if (!container) return;
+      container.innerHTML = "";
+      activeBlueprintSteps.forEach((s, i) => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-purple-100 text-xs font-bold">
+            <span class="font-extrabold text-purple-700 w-5 text-right">${i+1}.</span>
+            <input type="text" value="${s.name}" onchange="activeBlueprintSteps[${i}].name = this.value" class="flex-1 bg-slate-50 border p-1 rounded font-bold text-xs">
+            <select onchange="activeBlueprintSteps[${i}].unit = this.value" class="bg-slate-50 border p-1 rounded font-bold text-xs">
+              <option value="Hours" ${s.unit === 'Hours' ? 'selected' : ''}>Hours ⌛</option>
+              <option value="Cycles" ${s.unit === 'Cycles' ? 'selected' : ''}>Cycles 🔄</option>
+            </select>
+            <input type="number" value="${s.target}" onchange="activeBlueprintSteps[${i}].target = Number(this.value)" class="w-16 bg-slate-50 border p-1 rounded font-bold text-center">
+            <button type="button" onclick="removeGeneratedStep(${i})" class="text-slate-400 hover:text-rose-600 font-extrabold px-1 text-sm">✕</button>
+          </div>
+        `;
+      });
+    }
+
+    function addGeneratedStepRow() {
+      activeBlueprintSteps.push({ name: `${activeBlueprintSteps.length + 1}. New Step`, unit: 'Hours', target: 10 });
+      renderGeneratedSteps();
+    }
+
+    function removeGeneratedStep(idx) {
+      activeBlueprintSteps.splice(idx, 1);
+      renderGeneratedSteps();
+    }
+
+    function loadBlueprintSteps() {
+      const bp = document.getElementById('inp-blueprint').value;
+      if (bp === 'CUSTOM') {
+        activeBlueprintSteps = [{ name: '1. Custom Inspection Step', unit: 'Hours', target: 1 }];
+      } else if (customFlowsCache[bp]) {
+        activeBlueprintSteps = customFlowsCache[bp].map((st, idx) => ({ name: `${idx+1}. ${st}`, unit: 'Hours', target: 10 }));
+      } else {
+        activeBlueprintSteps = [
+          { name: '1. Pre-Test Inspection', unit: 'Hours', target: 1 },
+          { name: '2. Pre-Capacity Soak', unit: 'Hours', target: 2 },
+          { name: '3. Aging Chamber Soak', unit: 'Hours', target: 12 },
+          { name: '4. Cycling Profile Run', unit: 'Cycles', target: 100 }
+        ];
+      }
+      renderGeneratedSteps();
+    }
+
+    function fetchFlows() {
+      fetch('/api/get_flows/' + curLab)
+        .then(res => res.json())
+        .then(flows => {
+          customFlowsCache = flows;
+          const sel = document.getElementById('inp-blueprint');
+          if (!sel) return;
+          sel.innerHTML = `<option value="CUSTOM">Custom Single Step</option>`;
+          Object.keys(flows).forEach(flowName => {
+            sel.innerHTML += `<option value="${flowName}">${flowName} (${flows[flowName].length} Steps)</option>`;
+          });
+        });
+    }
+
+    function addFlowStepInput() {
+      const container = document.getElementById('flow-steps-container');
+      if (!container) return;
+      const idx = container.children.length + 1;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'flow-step-item w-full bg-slate-50 border border-slate-200 p-2 rounded-lg';
+      input.placeholder = `${idx}. Step Name`;
+      container.appendChild(input);
+    }
+
+    function saveCustomFlow() {
+      const flowName = document.getElementById('flow-name-inp').value.trim();
+      const stepInputs = document.querySelectorAll('.flow-step-item');
+      const steps = [];
+      stepInputs.forEach(i => { if (i.value.trim()) steps.push(i.value.trim()); });
+
+      if (!flowName || !steps.length) return alert("Please enter flow name and steps.");
+
+      fetch('/api/create_flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lab_name: curLab, flow_name: flowName, steps: steps })
+      }).then(() => {
+        alert("✅ Custom Flow Template Saved!");
+        document.getElementById('flow-name-inp').value = "";
+        fetchFlows();
+      });
+    }
+
+    function handleCreateTask(e) {
+      e.preventDefault();
+      fetch('/api/create_task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lab_name: curLab,
+          bin_pack: document.getElementById('inp-bin').value,
+          dvp_name: document.getElementById('inp-dvp').value,
+          category: document.getElementById('inp-category').value,
+          sprint_id: document.getElementById('inp-sprint-id').value,
+          steps: activeBlueprintSteps
         })
-    return jsonify(matrix)
+      }).then(() => {
+        alert("✅ Task Blueprint Generated!");
+        fetchTasks();
+      });
+    }
 
-@app.route('/api/update_roster_day', methods=['POST'])
-def update_roster_day():
-    data = request.json
-    day_col = f"day_{data.get('day_num')}"
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute(f"UPDATE monthly_roster_matrix SET {day_col} = ? WHERE lab_name = ? AND operator_name = ? AND year_month = ?",
-              (data.get('status_code'), data.get('lab_name'), data.get('operator_name'), data.get('year_month', '2026-09')))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/delete_associate', methods=['POST'])
-def delete_associate():
-    data = request.json
-    lab_name = data.get('lab_name')
-    name = data.get('operator_name')
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("DELETE FROM associates_master WHERE lab_name = ? AND associate_name = ?", (lab_name, name))
-    c.execute("DELETE FROM monthly_roster_matrix WHERE lab_name = ? AND operator_name = ?", (lab_name, name))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/edit_associate_name', methods=['POST'])
-def edit_associate_name():
-    data = request.json
-    lab_name = data.get('lab_name')
-    old_name = data.get('old_name')
-    new_name = data.get('new_name')
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("UPDATE associates_master SET associate_name = ? WHERE lab_name = ? AND associate_name = ?", (new_name, lab_name, old_name))
-    c.execute("UPDATE monthly_roster_matrix SET operator_name = ? WHERE lab_name = ? AND operator_name = ?", (new_name, lab_name, old_name))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/clone_roster', methods=['POST'])
-def clone_roster():
-    data = request.json
-    lab_name = data.get('lab_name')
-    curr_month = data.get('current_month')
-    next_month = data.get('next_month')
-
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM monthly_roster_matrix WHERE lab_name = ? AND year_month = ?", (lab_name, curr_month))
-    rows = c.fetchall()
-
-    for r in rows:
-        c.execute("DELETE FROM monthly_roster_matrix WHERE lab_name = ? AND operator_name = ? AND year_month = ?", (lab_name, r[2], next_month))
-        vals = [lab_name, r[2], next_month] + list(r[4:])
-        c.execute("""
-            INSERT INTO monthly_roster_matrix 
-            (lab_name, operator_name, year_month, day_1, day_2, day_3, day_4, day_5, day_6, day_7, day_8, day_9, day_10, day_11, day_12, day_13, day_14, day_15, day_16, day_17, day_18, day_19, day_20, day_21, day_22, day_23, day_24, day_25, day_26, day_27, day_28, day_29, day_30, day_31)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, vals)
-
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/get_masters/<lab_name>')
-def get_masters(lab_name):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT associate_name, role_title FROM associates_master WHERE lab_name = ?", (lab_name,))
-    rows = c.fetchall()
-    associates = [r[0] for r in rows]
-    incharges = [r[0] for r in rows if r[1] == 'Shift Incharge'] or associates
-    
-    c.execute("SELECT component_name FROM components_master WHERE lab_name = ?", (lab_name,))
-    components = [r[0] for r in c.fetchall()]
-    conn.close()
-    
-    return jsonify({"associates": associates, "incharges": incharges, "components": components})
-
-@app.route('/api/add_associate', methods=['POST'])
-def add_associate():
-    data = request.json
-    lab_name = data.get('lab_name')
-    name = data.get('name')
-    role = data.get('role', 'Technician')
-
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("INSERT INTO associates_master (lab_name, associate_name, role_title) VALUES (?, ?, ?)", (lab_name, name, role))
-    c.execute("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", (lab_name, name, "2026-09"))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-@app.route('/api/add_component', methods=['POST'])
-def add_component():
-    data = request.json
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("INSERT INTO components_master (lab_name, component_name) VALUES (?, ?)", (data.get('lab_name'), data.get('name')))
-    conn.commit()
-    conn.close()
-    return jsonify({"success": True})
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    function closeGrafanaModal() { document.getElementById('modal-grafana').classList.add('hidden'); }
+    function openAddStationModal() { document.getElementById('modal-add-station').classList.remove('hidden'); }
+    function closeAddStationModal() { document.getElementById('modal-add-station').classList.add('hidden'); }
+    function openGuideModal() { alert("📖 Operator Guide: Use left navigation icons to switch views. Task Planner lets you save custom flows to populate profile dropdowns."); }
+    function exitToLanding() { document.getElementById('screen-console').classList.add('hidden'); document.getElementById('screen-landing').classList.remove('hidden'); }
+    function handleGlobalSearch(txt) { console.log("Searching: " + txt); }
+  </script>
+</body>
+</html>
