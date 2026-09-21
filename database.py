@@ -7,7 +7,7 @@ def init_db():
     conn = get_connection()
     c = conn.cursor()
     
-    # Master Tasks & Nested Subtasks Table
+    # Master Tasks & Subtasks Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS master_tasks (
             task_id TEXT PRIMARY KEY,
@@ -141,7 +141,7 @@ def init_db():
         ]
         c.executemany("INSERT INTO monthly_roster_matrix (lab_name, operator_name, year_month) VALUES (?, ?, ?)", roster_seeds)
 
-    # Seed Default Components if empty
+    # Seed Default Component Categories if empty
     c.execute("SELECT COUNT(*) FROM components_master")
     if c.fetchone()[0] == 0:
         comp_seeds = [
@@ -155,16 +155,16 @@ def init_db():
         ]
         c.executemany("INSERT INTO components_master (lab_name, component_name) VALUES (?, ?)", comp_seeds)
 
-    # Seed Default Flow Blueprints
+    # Seed Default Flow Blueprints if empty
     c.execute("SELECT COUNT(*) FROM custom_flows")
     if c.fetchone()[0] == 0:
         flow_seeds = [
-            ('BatteryLab_Tasks', 'TL-2', 1, 'Pre-Test Check'),
-            ('BatteryLab_Tasks', 'TL-2', 2, 'Pre-Capacity'),
-            ('BatteryLab_Tasks', 'TL-2', 3, 'Thermal Cycling'),
-            ('BatteryLab_Tasks', 'TL-9', 1, 'Pre-Test Inspection'),
-            ('BatteryLab_Tasks', 'TL-9', 2, 'Life Cycle Run'),
-            ('BatteryLab_Tasks', 'TL-9', 3, 'Post Capacity Check')
+            ('BatteryLab_Tasks', 'TL-1 Standard', 1, 'Pre-Capacity Check'),
+            ('BatteryLab_Tasks', 'TL-1 Standard', 2, 'Pre-Aging Chamber Soak'),
+            ('BatteryLab_Tasks', 'TL-1 Standard', 3, 'Vibration Profile Run'),
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 1, 'Pre-Test Inspection'),
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 2, 'Life Cycle Cycling Run'),
+            ('BatteryLab_Tasks', 'TL-9 Life Cycle', 3, 'Post Capacity Check')
         ]
         c.executemany("INSERT INTO custom_flows (lab_name, flow_name, step_order, step_name) VALUES (?, ?, ?, ?)", flow_seeds)
 
