@@ -1,10 +1,14 @@
 import os
 from flask import Flask, render_template, request, jsonify
+from werkzeug.utils import secure_filename
 import sqlite3
 from datetime import datetime
 from database import init_db, get_connection
 
 app = Flask(__name__, template_folder='.', static_folder='static')
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 init_db()
 
@@ -12,6 +16,7 @@ init_db()
 def index():
     return render_template('index.html')
 
+# API: GET TASKS
 @app.route('/api/tasks/<lab_name>')
 def get_tasks(lab_name):
     conn = get_connection()
@@ -32,26 +37,93 @@ def get_tasks(lab_name):
         })
     return jsonify(tasks)
 
+# API: GET EQUIPMENT STATIONS (WITH IMAGES & METADATA)
 @app.route('/api/get_stations/<lab_name>')
 def get_stations(lab_name):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT id, station_code, display_name, station_type, room_zone, grafana_url FROM equipment_stations WHERE lab_name = ?", (lab_name,))
+    c.execute("""
+        SELECT id, station_code, display_name, station_type, room_zone, grafana_url, 
+               image_url, temp_range, voltage_rating, calibration_date 
+        FROM equipment_stations WHERE lab_name = ?
+    """, (lab_name,))
     rows = c.fetchall()
     conn.close()
-    return jsonify([{"id": r[0], "station_code": r[1], "display_name": r[2], "station_type": r[3], "room_zone": r[4], "grafana_url": r[5]} for r in rows])
+    return jsonify([{
+        "id": r[0], "station_code": r[1], "display_name": r[2], "station_type": r[3],
+        "room_zone": r[4], "grafana_url": r[5], "image_url": r[6] or '/static/default_chamber.png',
+        "temp_range": r[7] or '-40°C to +180°C', "voltage_rating": r[8] or '600V / 300A',
+        "calibration_date": r[9] or '2026-12-31'
+    } for r in rows])
 
+# API: ADD EQUIPMENT STATION
 @app.route('/api/add_station', methods=['POST'])
 def add_station():
     data = request.json
     conn = get_connection()
     c = conn.cursor()
-    c.execute("INSERT INTO equipment_stations (lab_name, station_code, display_name, station_type, room_zone, grafana_url) VALUES (?, ?, ?, ?, ?, ?)",
-              (data.get('lab_name'), data.get('station_code'), data.get('display_name'), data.get('station_type'), data.get('room_zone', 'Room-1'), data.get('grafana_url', 'https://grafana.com')))
+    c.execute("""
+        INSERT INTO equipment_stations (lab_name, station_code, display_name, station_type, room_zone, grafana_url, image_url, temp_range, voltage_rating, calibration_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data.get('lab_name'), data.get('station_code'), data.get('display_name'),
+        data.get('station_type'), data.get('room_zone', 'Room-1'),
+        data.get('grafana_url', 'https://grafana.com'),
+        data.get('image_url', ''), data.get('temp_range', '-40°C to +180°C'),
+        data.get('voltage_rating', '600V / 300A'), data.get('calibration_date', '2026-12-31')
+    ))
     conn.commit()
     conn.close()
     return jsonify({"success": True})
 
+# API: UPLOAD STATION IMAGE & METADATA
+@app.route('/api/upload_station_image', methods=['POST'])
+def upload_station_image():
+    station_code = request.form.get('station_code')
+    lab_name = request.form.get('lab_name')
+    temp_range = request.form.get('temp_range', '-40°C to +180°C')
+    voltage_rating = request.form.get('voltage_rating', '600V / 300A')
+    
+    file = request.files.get('chamber_image')
+    image_path = None
+    
+    if file and file.filename != '':
+        filename = secure_filename(f"{lab_name}_{station_code}_{file.filename}")
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+        image_path = f"/static/uploads/{filename}"
+
+    conn = get_connection()
+    c = conn.cursor()
+    if image_path:
+        c.execute("""
+            UPDATE equipment_stations 
+            SET image_url = ?, temp_range = ?, voltage_rating = ? 
+            WHERE lab_name = ? AND station_code = ?
+        """, (image_path, temp_range, voltage_rating, lab_name, station_code))
+    else:
+        c.execute("""
+            UPDATE equipment_stations 
+            SET temp_range = ?, voltage_rating = ? 
+            WHERE lab_name = ? AND station_code = ?
+        """, (temp_range, voltage_rating, lab_name, station_code))
+        
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "image_url": image_path})
+
+# API: DELETE STATION
+@app.route('/api/delete_station', methods=['POST'])
+def delete_station():
+    data = request.json
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM equipment_stations WHERE lab_name = ? AND station_code = ?", (data.get('lab_name'), data.get('station_code')))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
+# API: CREATE TASK
 @app.route('/api/create_task', methods=['POST'])
 def create_task():
     data = request.json
@@ -68,6 +140,7 @@ def create_task():
     conn.close()
     return jsonify({"success": True, "master_id": master_id})
 
+# API: ROSTER MATRIX
 @app.route('/api/get_roster_matrix/<lab_name>/<year_month>')
 def get_roster_matrix(lab_name, year_month):
     conn = get_connection()
@@ -104,6 +177,7 @@ def update_roster_day():
     conn.close()
     return jsonify({"success": True})
 
+# API: MASTERS
 @app.route('/api/get_masters/<lab_name>')
 def get_masters(lab_name):
     conn = get_connection()
