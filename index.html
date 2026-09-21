@@ -92,33 +92,103 @@
 
     <div class="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto space-y-6">
 
-      <!-- VIEW 1: TASK PLANNER -->
+      <!-- VIEW 1: TASK PLANNER WITH 3 SECTIONS MATCHING SCREENSHOTS EXACTLY -->
       <section id="mod-planner" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2 db-card p-6 space-y-6">
-            <h2 class="text-base font-bold text-slate-900">Create Master DVP Blueprint Task</h2>
-            <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-4 text-xs">
-              <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-slate-500 font-medium mb-1">BIN / Serial No. *</label><input type="text" id="inp-bin" required placeholder="e.g. 450-9702" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></div>
-                <div><label class="block text-slate-500 font-medium mb-1">DVP Test Name *</label><input type="text" id="inp-dvp" required placeholder="e.g. TL-9" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></div>
-              </div>
+          <div class="lg:col-span-2 space-y-6">
+            
+            <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-6 text-xs">
+              
+              <!-- SECTION 1: BASIC TASK IDENTIFICATION & COMPONENT -->
+              <div class="db-card p-6 space-y-4">
+                <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">1. Basic Task Identification & Component</h3>
+                
+                <div class="grid grid-cols-3 gap-4">
+                  <div><label class="block text-slate-500 font-bold mb-1">BIN / Serial No. *</label><input type="text" id="inp-bin" required placeholder="e.g. 450-9702" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-semibold"></div>
+                  <div><label class="block text-slate-500 font-bold mb-1">TRF Reference ID</label><input type="text" id="inp-trf" placeholder="e.g. TRF-2026-081" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-semibold"></div>
+                  <div><label class="block text-slate-500 font-bold mb-1">DVP Test Name *</label><input type="text" id="inp-dvp" required placeholder="e.g. TL-1" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-semibold"></div>
+                </div>
 
-              <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-slate-500 font-medium mb-1">Tested Component Category *</label><select id="inp-category" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></select></div>
-                <div>
-                  <label class="block text-slate-500 font-medium mb-1">Priority *</label>
-                  <select id="inp-priority" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium">
-                    <option value="P1">P1 - Critical</option>
-                    <option value="P2">P2 - High</option>
-                    <option value="P3">P3 - Medium</option>
-                  </select>
+                <div class="grid grid-cols-2 gap-4">
+                  <div><label class="block text-slate-500 font-bold mb-1">Tested Component Category *</label><select id="inp-category" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-semibold"></select></div>
+                  <div>
+                    <label class="block text-slate-500 font-bold mb-1">Priority *</label>
+                    <select id="inp-priority" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-semibold">
+                      <option value="P1">P1 - Critical</option>
+                      <option value="P2">P2 - High</option>
+                      <option value="P3">P3 - Medium</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div><label class="block text-slate-500 font-medium mb-1">Select Reusable Flow Blueprint *</label><select id="inp-blueprint" class="w-full bg-slate-50 border border-slate-200 text-blue-600 font-bold p-2.5 rounded-xl"><option value="CUSTOM">Custom Single Step</option></select></div>
-              <div><label class="block text-slate-500 font-medium mb-1">Test Objective & Background *</label><textarea id="inp-background" required rows="3" placeholder="Describe engineering purpose..." class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea></div>
+              <!-- SECTION 2: MASTER TEST BLUEPRINT, OBJECTIVE & BACKGROUND (MATCHING SCREENSHOT 2) -->
+              <div class="db-card p-6 space-y-4">
+                <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">2. Master Test Blueprint, Objective & Background</h3>
 
-              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-md">Generate Master Task Blueprint ➔</button>
+                <div>
+                  <label class="block text-slate-500 font-bold mb-1">SELECT PROFILE BLUEPRINT *</label>
+                  <select id="inp-blueprint" onchange="loadBlueprintSteps()" class="w-full bg-slate-50 border border-slate-200 text-blue-600 font-extrabold p-2.5 rounded-xl">
+                    <option value="CUSTOM">Custom Single Step</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div><label class="block text-slate-500 font-bold mb-1">TEST OBJECTIVE *</label><textarea id="inp-objective" required rows="3" placeholder="e.g. Evaluate battery pack performance under high temperature cycling" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea></div>
+                  <div><label class="block text-slate-500 font-bold mb-1">TEST BACKGROUND / JUSTIFICATION</label><textarea id="inp-background" rows="3" placeholder="e.g. STB 450 Gen 2 validation run for Sprint 27.2 release" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-medium"></textarea></div>
+                </div>
+
+                <!-- GENERATED STEPS EDITOR (MATCHING SCREENSHOT 2 EXACTLY) -->
+                <div class="bg-purple-50/50 border border-purple-100 rounded-2xl p-4 space-y-3">
+                  <span class="text-[11px] font-black text-purple-900 uppercase block">📋 GENERATED STEPS (EDIT NAMES, HOURS/CYCLES, OR TARGETS):</span>
+                  <div id="list-generated-steps" class="space-y-2"></div>
+                </div>
+              </div>
+
+              <!-- SECTION 3: OWNERSHIP, TARGET SHIFT & PIN (MATCHING SCREENSHOT 3) -->
+              <div class="db-card p-6 space-y-4">
+                <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">3. Ownership, Target Shift & PIN</h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div><label class="block text-slate-500 font-bold mb-1">LEAD ENGINEER OWNER *</label><input type="text" id="inp-lead-eng" required value="Raj Kumar" placeholder="e.g. Yeshwanth" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold"></div>
+                  <div>
+                    <label class="block text-slate-500 font-bold mb-1">TARGET INITIAL SHIFT *</label>
+                    <select id="inp-target-shift" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold">
+                      <option value="Unassigned">None / Unassigned (Draft Matrix)</option>
+                      <option value="Shift A">Shift A</option>
+                      <option value="Shift B">Shift B</option>
+                      <option value="Shift C">Shift C</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                  <div><label class="block text-slate-500 font-bold mb-1">START DATE *</label><input type="date" id="inp-start-date" required class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold"></div>
+                  <div><label class="block text-slate-500 font-bold mb-1">TARGET END DATE *</label><input type="date" id="inp-target-end-date" required class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold"></div>
+                  <div><label class="block text-slate-500 font-bold mb-1">EXPECTED END DATE *</label><input type="date" id="inp-exp-end-date" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-bold"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-slate-500 font-bold mb-1">TARGET SPRINT ALLOCATION *</label>
+                    <select id="inp-sprint-id" class="w-full bg-slate-50 border border-slate-200 text-slate-900 p-2.5 rounded-xl font-extrabold">
+                      <option value="Sprint 27.2.1">Sprint 27.2.1</option>
+                      <option value="Sprint 27.2.2">Sprint 27.2.2</option>
+                      <option value="Sprint 27.2.3">Sprint 27.2.3</option>
+                    </select>
+                  </div>
+
+                  <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3">
+                    <label class="block text-blue-900 font-black mb-1">🔒 MANAGER SECURITY PIN * (1234)</label>
+                    <input type="password" id="inp-pin" required placeholder="Enter PIN..." class="w-full bg-white border border-blue-200 text-slate-900 p-2 rounded-xl font-bold">
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl text-xs shadow-lg transition">
+                  💾 GENERATE TASK BLUEPRINT ➔
+                </button>
+              </div>
+
             </form>
           </div>
 
@@ -173,8 +243,8 @@
             <input type="text" id="inp-search-filter" onkeyup="renderExecDashboard()" placeholder="Search TRF, BIN, or Project..." class="bg-slate-50 border border-slate-200 text-slate-900 font-medium text-xs p-2.5 rounded-xl w-64">
             <select id="sel-sprint-filter" onchange="renderExecDashboard()" class="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs p-2.5 rounded-xl">
               <option value="ALL">Sprint: All Sprints</option>
-              <option value="27.2.1">Sprint 27.2.1</option>
-              <option value="27.2.2">Sprint 27.2.2</option>
+              <option value="Sprint 27.2.1">Sprint 27.2.1</option>
+              <option value="Sprint 27.2.2">Sprint 27.2.2</option>
             </select>
           </div>
           <span id="lbl-result-count" class="text-xs font-bold text-slate-400">Displaying 0 results</span>
@@ -431,7 +501,6 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- SHIFT TASKS COMPLETED BAR CHART (MATCHING YOUR SCREENSHOT) -->
             <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
               <span class="text-xs font-black text-slate-800 uppercase block">Shift Tasks Completed Comparison</span>
               <div class="h-64 flex items-center justify-center">
@@ -439,7 +508,6 @@
               </div>
             </div>
 
-            <!-- ASSOCIATE PERFORMANCE SCORECARD -->
             <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
               <span class="text-xs font-black text-slate-800 uppercase block">Associate Performance Scorecard</span>
               <div class="h-64 flex items-center justify-center">
@@ -564,6 +632,14 @@
     let expandedTasks = {};
     let masterAssociates = [];
     let masterIncharges = [];
+    let activeBlueprintSteps = [
+      { name: '1. Pre-Test Check', unit: 'Hours', target: 1 },
+      { name: '2. Pre-Capacity', unit: 'Hours', target: 1 },
+      { name: '3. Pre-aging', unit: 'Hours', target: 1 },
+      { name: '4. Random Vibration', unit: 'Hours', target: 8 },
+      { name: '5. Mechanical Shock', unit: 'Hours', target: 1 }
+    ];
+
     let chart450Inst = null, chartDieselInst = null, chartELInst = null, chartPerfInst = null, chartShiftCompInst = null;
 
     function enterDepartment(labName, deptTitle) {
@@ -577,6 +653,7 @@
       fetchMasters();
       fetchTasks();
       fetchRosterMatrix();
+      renderGeneratedSteps();
     }
 
     function exitToLanding() {
@@ -630,6 +707,46 @@
           renderExecDashboard();
           updateDigitalTwinMap();
         });
+    }
+
+    function renderGeneratedSteps() {
+      const container = document.getElementById('list-generated-steps');
+      container.innerHTML = "";
+      activeBlueprintSteps.forEach((s, i) => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-purple-100">
+            <span class="font-extrabold text-purple-700 w-5 text-right">${i+1}.</span>
+            <input type="text" value="${s.name}" onchange="activeBlueprintSteps[${i}].name = this.value" class="flex-1 bg-slate-50 border p-1 rounded font-bold text-xs">
+            <select onchange="activeBlueprintSteps[${i}].unit = this.value" class="bg-slate-50 border p-1 rounded font-bold text-xs">
+              <option value="Hours" ${s.unit === 'Hours' ? 'selected' : ''}>Hours ⌛</option>
+              <option value="Cycles" ${s.unit === 'Cycles' ? 'selected' : ''}>Cycles 🔄</option>
+            </select>
+            <input type="number" value="${s.target}" onchange="activeBlueprintSteps[${i}].target = Number(this.value)" class="w-16 bg-slate-50 border p-1 rounded font-bold text-xs text-center">
+            <button type="button" onclick="removeGeneratedStep(${i})" class="text-slate-400 hover:text-rose-600 font-extrabold text-sm px-1.5">✕</button>
+          </div>
+        `;
+      });
+    }
+
+    function removeGeneratedStep(idx) {
+      activeBlueprintSteps.splice(idx, 1);
+      renderGeneratedSteps();
+    }
+
+    function loadBlueprintSteps() {
+      const bp = document.getElementById('inp-blueprint').value;
+      if (bp === 'CUSTOM') {
+        activeBlueprintSteps = [{ name: '1. Initial Inspection', unit: 'Hours', target: 1 }];
+      } else {
+        activeBlueprintSteps = [
+          { name: '1. Pre-Test Check', unit: 'Hours', target: 1 },
+          { name: '2. Pre-Capacity', unit: 'Hours', target: 1 },
+          { name: '3. Pre-aging', unit: 'Hours', target: 1 },
+          { name: '4. Random Vibration', unit: 'Hours', target: 8 },
+          { name: '5. Mechanical Shock', unit: 'Hours', target: 1 }
+        ];
+      }
+      renderGeneratedSteps();
     }
 
     function fetchRosterMatrix() {
@@ -936,6 +1053,14 @@
                         <option value="3 Ton Shaker" ${s.cycler_id === '3 Ton Shaker' ? 'selected' : ''}>3 Ton Shaker</option>
                       </select>
 
+                      <span class="text-slate-400">SHIFT:</span>
+                      <select id="shift-${s.task_id}" class="bg-slate-50 border p-1 rounded font-bold">
+                        <option value="Unassigned" ${s.target_shift === 'Unassigned' ? 'selected' : ''}>Unassigned / Flexible</option>
+                        <option value="Shift A" ${s.target_shift === 'Shift A' ? 'selected' : ''}>Shift A</option>
+                        <option value="Shift B" ${s.target_shift === 'Shift B' ? 'selected' : ''}>Shift B</option>
+                        <option value="Shift C" ${s.target_shift === 'Shift C' ? 'selected' : ''}>Shift C</option>
+                      </select>
+
                       <span class="text-slate-400">INCHARGE:</span>
                       <select id="inch-${s.task_id}" class="bg-slate-50 border p-1 rounded font-bold">
                         ${inchOptions}
@@ -971,7 +1096,7 @@
           labels: ['Shift A', 'Shift B', 'Shift C'],
           datasets: [{
             label: 'Shift Tasks Completed',
-            data: [cntA || 33, cntB || 39, cntC || 18],
+            data: [cntA, cntB, cntC],
             backgroundColor: '#2563eb',
             borderRadius: 6
           }]
@@ -979,7 +1104,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true, max: 40 } }
+          scales: { y: { beginAtZero: true } }
         }
       });
     }
@@ -1007,7 +1132,7 @@
 
     function assignSubtaskStep(subtaskId) {
       const dateVal = document.getElementById(`date-${subtaskId}`).value;
-      const shiftVal = "Shift A";
+      const shiftVal = document.getElementById(`shift-${subtaskId}`).value;
       const inchVal = document.getElementById(`inch-${subtaskId}`).value;
       const chambVal = document.getElementById(`chamb-${subtaskId}`).value;
       const cyclVal = document.getElementById(`cycl-${subtaskId}`).value;
@@ -1019,7 +1144,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subtask_id: subtaskId, assign_date: dateVal, target_shift: shiftVal, shift_incharge: inchVal, chamber_id: chambVal, cycler_id: cyclVal, target_units: targetVal, unit_type: unitTypeVal })
       }).then(() => {
-        alert(`✅ Step Assigned: ${targetVal} ${unitTypeVal} locked to ${chambVal} & ${cyclVal}`);
+        alert(`✅ Step Assigned: ${targetVal} ${unitTypeVal} locked to ${chambVal} & ${cyclVal} for ${shiftVal}`);
         fetchTasks();
       });
     }
@@ -1036,7 +1161,7 @@
         type: 'doughnut',
         data: {
           labels: ['Running', 'Complete'],
-          datasets: [{ data: [runCnt || 1, compCnt], backgroundColor: ['#2563eb', '#dc2626'] }]
+          datasets: [{ data: [runCnt, compCnt], backgroundColor: ['#2563eb', '#dc2626'] }]
         },
         options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
       });
@@ -1169,7 +1294,7 @@
         type: 'bar',
         data: {
           labels: Object.keys(assocCounts).length ? Object.keys(assocCounts) : ['Sathya', 'Sanjay', 'Yosvaraj'],
-          datasets: [{ label: 'Subtasks Completed', data: Object.values(assocCounts).length ? Object.values(assocCounts) : [4, 2, 1], backgroundColor: '#2563eb', borderRadius: 8 }]
+          datasets: [{ label: 'Subtasks Completed', data: Object.values(assocCounts).length ? Object.values(assocCounts) : [0, 0, 0], backgroundColor: '#2563eb', borderRadius: 8 }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
@@ -1248,14 +1373,28 @@
 
     function handleCreateTask(e) {
       e.preventDefault();
+      
+      const pin = document.getElementById('inp-pin').value;
+      if (pin !== '1234') {
+        alert("🛑 SECURITY ERROR: Invalid Manager Security PIN.");
+        return;
+      }
+
       const payload = {
         lab_name: curLab,
         bin_pack: document.getElementById('inp-bin').value,
+        trf_id: document.getElementById('inp-trf').value,
         dvp_name: document.getElementById('inp-dvp').value,
         category: document.getElementById('inp-category').value,
         priority: document.getElementById('inp-priority').value,
         flow_name: document.getElementById('inp-blueprint').value,
-        background: document.getElementById('inp-background').value
+        background: document.getElementById('inp-objective').value + "\n" + document.getElementById('inp-background').value,
+        lead_engineer: document.getElementById('inp-lead-eng').value,
+        target_shift: document.getElementById('inp-target-shift').value,
+        start_date: document.getElementById('inp-start-date').value,
+        target_end_date: document.getElementById('inp-target-end-date').value,
+        sprint_id: document.getElementById('inp-sprint-id').value,
+        steps: activeBlueprintSteps
       };
 
       fetch('/api/create_task', {
@@ -1263,7 +1402,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       }).then(() => {
-        alert("✅ Master Task Blueprint Generated!");
+        alert("✅ Master Task Blueprint & Steps Generated!");
         document.getElementById('form-create-task').reset();
         fetchTasks();
         switchModule('mod-exec-dashboard');
