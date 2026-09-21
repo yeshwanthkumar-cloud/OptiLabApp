@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E&E Opti Lab Governance Platform</title>
+  <title>E&E Opti Lab</title>
   
   <!-- Tailwind CSS & Chart.js -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,13 +13,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <style>
-    /* ==========================================================================
-       ENTERPRISE DARWINBOX UI THEME & SCADA CUSTOM STYLES
-       ========================================================================== */
     :root {
       --primary-slate: #0f172a;
       --accent-blue: #2563eb;
-      --accent-indigo: #4f46e5;
       --card-bg: #ffffff;
       --border-color: #f1f5f9;
     }
@@ -107,7 +103,6 @@
       font-weight: 800;
     }
 
-    /* Custom Scrollbars */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -119,55 +114,44 @@
       background: #cbd5e1;
       border-radius: 10px;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
   </style>
 </head>
 <body class="h-full flex overflow-hidden bg-slate-50 text-slate-800">
 
   <!-- ==================================================================== -->
-  <!-- SCREEN 1: DEPARTMENT LANDING CONSOLE SELECTOR                        -->
+  <!-- SCREEN 1: LANDING PAGE (CLEAN WHITE / SLATE LIGHT THEME)             -->
   <!-- ==================================================================== -->
-  <div id="screen-landing" class="h-full w-full flex flex-col items-center justify-center p-6 space-y-10 bg-slate-900 text-white z-50 fixed inset-0">
+  <div id="screen-landing" class="h-full w-full flex flex-col items-center justify-center p-6 space-y-10 bg-slate-50 text-slate-900 z-50 fixed inset-0">
     <div class="text-center space-y-3">
-      <div class="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-blue-500/30">⚡</div>
-      <h1 class="text-4xl md:text-5xl font-black tracking-tight">E&E OPTI LAB</h1>
-      <p class="text-xs font-bold uppercase text-slate-400 tracking-widest">Select Department Governance Environment</p>
+      <div class="w-16 h-16 mx-auto rounded-3xl bg-blue-600 text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-blue-500/20">⚡</div>
+      <h1 class="text-4xl md:text-5xl font-black tracking-tight text-slate-900">E&E Opti Lab</h1>
+      <p class="text-xs font-extrabold uppercase text-slate-400 tracking-widest">Select Department Console</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl w-full px-4">
-      <!-- Battery Lab Selection -->
-      <button onclick="enterDepartment('BatteryLab_Tasks', 'BATTERY LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group border-slate-800 bg-slate-800/50 hover:bg-slate-800">
-        <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl group-hover:scale-110 transition">🔋</div>
-        <span class="font-black text-base text-white uppercase tracking-wider">BATTERY LAB</span>
-        <span class="text-[10px] text-slate-400 font-medium">Pack Testing & SCADA</span>
+      <button onclick="enterDepartment('BatteryLab_Tasks', 'BATTERY LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">🔋</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">BATTERY LAB</span>
+        <span class="text-[10px] text-slate-400 font-bold">Pack Testing & SCADA</span>
       </button>
 
-      <!-- Cell Lab Selection -->
-      <button onclick="enterDepartment('CellLab_Tasks', 'CELL LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group border-slate-800 bg-slate-800/50 hover:bg-slate-800">
-        <div class="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-3xl group-hover:scale-110 transition">🧪</div>
-        <span class="font-black text-base text-white uppercase tracking-wider">CELL LAB</span>
-        <span class="text-[10px] text-slate-400 font-medium">Cell Characterization</span>
+      <button onclick="enterDepartment('CellLab_Tasks', 'CELL LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">🧪</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">CELL LAB</span>
+        <span class="text-[10px] text-slate-400 font-bold">Cell Characterization</span>
       </button>
 
-      <!-- Vibration Team Selection -->
-      <button onclick="enterDepartment('Vibration_Tasks', 'VIBRATION TEAM')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group border-slate-800 bg-slate-800/50 hover:bg-slate-800">
-        <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚡</div>
-        <span class="font-black text-base text-white uppercase tracking-wider">VIBRATION TEAM</span>
-        <span class="text-[10px] text-slate-400 font-medium">Shaker & Mechanical Shock</span>
+      <button onclick="enterDepartment('Vibration_Tasks', 'VIBRATION TEAM')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚡</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">VIBRATION TEAM</span>
+        <span class="text-[10px] text-slate-400 font-bold">Shaker & Mechanical Shock</span>
       </button>
 
-      <!-- E&E Lab Selection -->
-      <button onclick="enterDepartment('EELab_Tasks', 'E&E LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group border-slate-800 bg-slate-800/50 hover:bg-slate-800">
-        <div class="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚙️</div>
-        <span class="font-black text-base text-white uppercase tracking-wider">E&E LAB</span>
-        <span class="text-[10px] text-slate-400 font-medium">BMS & Harness Validation</span>
+      <button onclick="enterDepartment('EELab_Tasks', 'E&E LAB')" class="dw-card p-8 flex flex-col items-center space-y-4 hover:border-blue-500 transition group bg-white">
+        <div class="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-3xl group-hover:scale-110 transition">⚙️</div>
+        <span class="font-black text-base text-slate-900 uppercase tracking-wider">E&E LAB</span>
+        <span class="text-[10px] text-slate-400 font-bold">BMS & Harness Validation</span>
       </button>
-    </div>
-
-    <div class="text-center text-xs font-semibold text-slate-500">
-      E&E Opti Lab Platform • Enterprise Operations & Testing Governance
     </div>
   </div>
 
@@ -177,7 +161,7 @@
   <!-- ==================================================================== -->
   <div id="screen-console" class="hidden h-full w-full flex overflow-hidden">
     
-    <!-- DARWINBOX LEFT SIDEBAR NAVIGATION -->
+    <!-- LEFT SIDEBAR NAVIGATION -->
     <aside class="w-16 md:w-20 bg-slate-900 text-white flex flex-col items-center py-6 gap-8 shrink-0 z-20 shadow-2xl">
       <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/30">⚡</div>
       
@@ -200,7 +184,7 @@
       <!-- TOP HEADER BAR -->
       <header class="h-16 bg-white border-b border-slate-200/80 px-8 flex items-center justify-between shrink-0 z-10">
         <div class="flex items-center gap-6">
-          <h1 class="font-black text-lg tracking-tight text-slate-900" id="lbl-dept-title">E&E OPTI LAB</h1>
+          <h1 class="font-black text-lg tracking-tight text-slate-900" id="lbl-dept-title">E&E Opti Lab</h1>
           
           <div class="hidden sm:flex items-center bg-slate-100 rounded-2xl px-4 py-2 text-xs text-slate-500 w-72 border border-slate-200/60">
             <span class="mr-2">🔍</span>
@@ -209,17 +193,15 @@
         </div>
 
         <div class="flex items-center gap-4">
-          <!-- Department Selector Dropdown -->
-          <select id="sel-dept-picker" onchange="enterDepartment(this.value, this.options[this.selectedIndex].text)" class="bg-slate-100 border-none font-bold text-xs px-3.5 py-2 rounded-xl text-slate-700 focus:outline-none">
+          <select id="sel-dept-picker" onchange="enterDepartment(this.value, this.options[this.selectedIndex].text)" class="bg-slate-100 border-none font-extrabold text-xs px-3.5 py-2 rounded-xl text-slate-700 focus:outline-none">
             <option value="BatteryLab_Tasks">Battery Lab</option>
             <option value="CellLab_Tasks">Cell Lab</option>
             <option value="Vibration_Tasks">Vibration Team</option>
             <option value="EELab_Tasks">E&E Lab</option>
           </select>
 
-          <!-- User Badge -->
           <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-md">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md">
               EO
             </div>
             <div class="hidden md:block text-left">
@@ -233,30 +215,16 @@
       <!-- SCROLLABLE MODULE BODY -->
       <main class="flex-1 overflow-y-auto p-8 max-w-7xl w-full mx-auto space-y-6">
 
-        <!-- DARWINBOX HERO BANNER -->
-        <div class="dw-card p-6 bg-gradient-to-r from-blue-600/10 via-indigo-500/5 to-transparent border border-blue-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div class="space-y-1">
-            <h2 class="text-xl font-black text-slate-900">E&E Opti Lab Governance Platform 💥</h2>
-            <p class="text-xs font-semibold text-slate-500">Customizable dynamic SCADA map builder, lab component registration desk, and shift execution.</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <button onclick="switchView('mod-workbench')" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/20 transition">Shift Workbench ➔</button>
-            <button onclick="switchView('mod-observation')" class="bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs px-5 py-3 rounded-2xl border border-slate-200 transition">Floor Map Twin 🗺️</button>
-          </div>
-        </div>
-
-
         <!-- ==================================================================== -->
         <!-- MODULE 1: SHIFT OPERATIONS WORKBENCH                                 -->
         <!-- ==================================================================== -->
         <section id="mod-workbench" class="space-y-6">
           
-          <!-- ATTENDANCE & SHIFT CONTROL PANEL -->
           <div class="dw-card p-6 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3.5">
               <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">👤</div>
               <div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift Attendance & Punch Desk</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift Attendance Desk</span>
                 <div class="flex items-center gap-2 mt-0.5">
                   <h3 class="text-sm font-extrabold text-slate-900">Operator Clock-In Desk</h3>
                   <span id="badge-clock-status" class="bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">Not Clocked In 🔴</span>
@@ -287,7 +255,6 @@
             </div>
           </div>
 
-          <!-- SHIFT MESSAGE INPUT BOX -->
           <div class="dw-card p-4 flex items-center gap-3 bg-white">
             <span class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1 shrink-0">
               <span>📝</span> SHIFT NOTE:
@@ -303,9 +270,7 @@
             <div id="list-notes-container" class="space-y-1.5 text-xs"></div>
           </div>
 
-          <!-- KANBAN COLUMNS -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- TO DO -->
             <div class="space-y-3">
               <div class="flex justify-between items-center px-2">
                 <span class="font-extrabold text-xs text-slate-500 uppercase tracking-wider">To Do</span>
@@ -314,7 +279,6 @@
               <div id="col-todo" class="space-y-3 min-h-[350px]"></div>
             </div>
 
-            <!-- IN PROGRESS -->
             <div class="space-y-3">
               <div class="flex justify-between items-center px-2">
                 <span class="font-extrabold text-xs text-emerald-600 uppercase tracking-wider">In Progress 🟢</span>
@@ -323,7 +287,6 @@
               <div id="col-running" class="space-y-3 min-h-[350px]"></div>
             </div>
 
-            <!-- BLOCKED / STOPPAGE -->
             <div class="space-y-3">
               <div class="flex justify-between items-center px-2">
                 <span class="font-extrabold text-xs text-rose-600 uppercase tracking-wider">Blocked / Issue 🛑</span>
@@ -352,18 +315,15 @@
             </div>
 
             <div class="space-y-6">
-              <!-- ROOM-1 GRID CONTAINER -->
               <div class="space-y-2">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Room-1 Primary Testing Bay</span>
                 <div id="container-room1-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 min-h-[120px] p-2 bg-slate-50/50 rounded-2xl border border-slate-100"></div>
               </div>
 
-              <!-- GANGWAY WALKWAY -->
               <div class="w-full bg-slate-900 text-emerald-400 font-mono text-xs font-black py-3 rounded-2xl text-center tracking-widest uppercase shadow-inner">
                 ─── MAIN LAB WALKWAY & LOGISTICS PASSAGE ───
               </div>
 
-              <!-- ROOM-2 GRID CONTAINER -->
               <div class="space-y-2">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Room-2 Secondary Testing Bay</span>
                 <div id="container-room2-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 min-h-[120px] p-2 bg-slate-50/50 rounded-2xl border border-slate-100"></div>
@@ -393,7 +353,6 @@
                 </div>
               </div>
 
-              <!-- KEY LEGEND -->
               <div class="flex flex-wrap items-center gap-2 text-[10px] font-black bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
                 <span class="text-slate-400 uppercase text-[9px] mr-1">KEY:</span>
                 <span class="flex items-center gap-1"><span class="rst-cell rst-cell-A">A</span> Shift A</span>
@@ -640,7 +599,6 @@
         document.getElementById(m).classList.add('hidden');
       });
 
-      // Update Navigation Highlight
       document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById('snav-' + modId.replace('mod-', ''));
       if (activeBtn) activeBtn.classList.add('active');
