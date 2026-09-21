@@ -12,7 +12,7 @@ def index():
     return render_template('index.html')
 
 # -----------------------------------------------------------------------------
-# GET TASKS (ISOLATED PER LAB, ZERO HARDCODED SAMPLE DATA)
+# GET TASKS
 # -----------------------------------------------------------------------------
 @app.route('/api/tasks/<lab_name>')
 def get_tasks(lab_name):
@@ -56,7 +56,6 @@ def create_task():
     c = conn.cursor()
     master_id = f"TSK-{datetime.now().strftime('%H%M%S')}"
     
-    # Insert Master Blueprint Task
     c.execute("""
         INSERT INTO master_tasks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
@@ -65,7 +64,6 @@ def create_task():
         "Running", background, f"[Objective]: {dvp_name}", target_end_date
     ))
 
-    # Insert Subtask Steps with Custom Targets & Units
     for idx, step in enumerate(steps_list):
         sub_id = f"SUB-{master_id.replace('TSK-','')}-{idx+1}"
         c.execute("""
