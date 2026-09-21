@@ -75,7 +75,6 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <!-- MODE TOGGLE SWITCH (FLOOR SHIFT vs LEAD ENGINEER FULL ACCESS) -->
         <div class="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center text-xs font-extrabold">
           <button id="btn-mode-shift" onclick="setConsoleMode('SHIFT')" class="px-3 py-1 rounded-lg bg-blue-600 text-white transition">☀️ Shift Floor View</button>
           <button id="btn-mode-eng" onclick="setConsoleMode('ENG')" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white transition">⚙️ Full Engineer Mode</button>
@@ -89,12 +88,10 @@
 
     <!-- NAVIGATION BAR -->
     <nav class="bg-white border-b border-slate-300 px-8 flex gap-8 shrink-0">
-      <!-- CORE SHIFT TABS (ALWAYS VISIBLE IN SHIFT MODE) -->
       <button onclick="switchModule('mod-workbench')" id="nav-workbench" class="nav-tab active py-3 text-xs font-bold text-slate-600 hover:text-slate-900 transition">☀️ Shift Operations (Workbench)</button>
       <button onclick="switchModule('mod-observation')" id="nav-observation" class="nav-tab py-3 text-xs font-bold text-slate-600 hover:text-slate-900 transition">🗺️ Floor Layout Twin (SCADA Map)</button>
       <button onclick="switchModule('mod-roster')" id="nav-roster" class="nav-tab py-3 text-xs font-bold text-slate-600 hover:text-slate-900 transition">📅 Shift Roster (Rotation Matrix)</button>
 
-      <!-- ENGINEERING & MANAGEMENT TABS (UNLOCKED IN FULL ENGINEER MODE) -->
       <button onclick="switchModule('mod-exec-dashboard')" id="nav-exec-dashboard" class="nav-tab eng-tab hidden py-3 text-xs font-bold text-slate-600 hover:text-slate-900 transition">📊 Executive DVP Matrix</button>
       <button onclick="switchModule('mod-planner')" id="nav-planner" class="nav-tab eng-tab hidden py-3 text-xs font-bold text-slate-600 hover:text-slate-900 transition">📋 Task Planner & Masters Desk</button>
       <button onclick="switchModule('mod-history')" id="nav-history" class="nav-tab eng-tab hidden py-3 text-xs font-bold text-slate-600 hover:text-slate-900 transition">📜 Task History Log</button>
@@ -182,7 +179,7 @@
         </div>
       </section>
 
-      <!-- VIEW 2: FLOOR LAYOUT TWIN MAP (SCADA) -->
+      <!-- VIEW 2: FLOOR LAYOUT TWIN MAP (ROOM-1 AND ROOM-2 RESTORED) -->
       <section id="mod-observation" class="hidden space-y-6">
         <div class="db-card p-4 flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-2">
@@ -218,21 +215,31 @@
               ─── MAIN LAB WALKWAY & LOGISTICS GANGWAY ───
             </div>
 
-            <div class="grid grid-cols-5 gap-4 items-start">
-              <div class="grid grid-cols-3 gap-2 col-span-2">
-                <div onclick="openGrafanaModal('EA-1')" id="eq-EA-1" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">EA Cycler #1</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
-                <div onclick="openGrafanaModal('EA-2')" id="eq-EA-2" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">EA Cycler #2</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
-                <div onclick="openGrafanaModal('EA-3')" id="eq-EA-3" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">EA Cycler #3</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
-              </div>
+            <div class="grid grid-cols-5 gap-3">
+              <div onclick="openGrafanaModal('EA-1')" id="eq-EA-1" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">EA Cycler #1</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+              <div onclick="openGrafanaModal('EA-2')" id="eq-EA-2" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">EA Cycler #2</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+              <div onclick="openGrafanaModal('EA-3')" id="eq-EA-3" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">EA Cycler #3</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+              <div onclick="openGrafanaModal('Chamber-7')" id="eq-Chamber-7" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">Chamber-7</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+              <div onclick="openGrafanaModal('Chamber-4')" id="eq-Chamber-4" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">Chamber-4</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+            </div>
+          </div>
+        </div>
 
-              <div class="flex justify-center">
-                <div class="w-12 bg-slate-700 h-20 rounded-b-lg border-x-2 border-slate-600"></div>
-              </div>
+        <!-- ROOM-2 SCADA MAP (RESTORED) -->
+        <div class="db-card p-6 space-y-4 overflow-x-auto">
+          <div class="border-b border-slate-200 pb-2">
+            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Room-2 Battery Lab Visual Floor Layout</h3>
+          </div>
 
-              <div class="grid grid-cols-2 gap-3 col-span-2">
-                <div onclick="openGrafanaModal('Chamber-7')" id="eq-Chamber-7" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">Chamber-7</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
-                <div onclick="openGrafanaModal('Chamber-4')" id="eq-Chamber-4" class="scada-box status-idle p-3 text-center"><span class="text-[10px] font-black block">Chamber-4</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
-              </div>
+          <div class="min-w-[950px] space-y-4">
+            <div class="grid grid-cols-3 gap-6">
+              <div onclick="openGrafanaModal('Air-Leak')" id="eq-Air-Leak" class="scada-box status-idle p-4 text-center"><span class="text-[10px] font-black block">Air Leak Tester</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+              <div onclick="openGrafanaModal('4-Channel')" id="eq-4-Channel" class="scada-box status-idle p-4 text-center bg-blue-50/50"><span class="text-[10px] font-black block">4-Channel Bench</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+              <div onclick="openGrafanaModal('Neware-Room2')" id="eq-Neware-Room2" class="scada-box status-idle p-4 text-center"><span class="text-[10px] font-black block">Neware Cycler</span><span class="eq-task font-mono text-[10px] font-bold text-slate-500 block mt-1">IDLE</span></div>
+            </div>
+
+            <div class="w-full bg-slate-800 text-slate-300 font-mono text-[10px] font-bold py-1.5 rounded-lg text-center tracking-widest uppercase">
+              ROOM-2 SECONDARY CONNECTOR PASSAGE
             </div>
           </div>
         </div>
@@ -329,7 +336,6 @@
             
             <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-6 text-xs">
               
-              <!-- SECTION 1 -->
               <div class="db-card p-6 space-y-4">
                 <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">1. Basic Task Identification & Component</h3>
                 
@@ -352,7 +358,6 @@
                 </div>
               </div>
 
-              <!-- SECTION 2 -->
               <div class="db-card p-6 space-y-4">
                 <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">2. Master Test Blueprint, Objective & Background</h3>
 
@@ -374,7 +379,6 @@
                 </div>
               </div>
 
-              <!-- SECTION 3 -->
               <div class="db-card p-6 space-y-4">
                 <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">3. Ownership, Target Shift & PIN</h3>
 
